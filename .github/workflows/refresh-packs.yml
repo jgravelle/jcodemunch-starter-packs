@@ -1,0 +1,70 @@
+name: refresh-packs
+
+# Re-index the Starter Pack repos and rebuild any pack whose upstream moved or
+# whose jcm engine version changed, then deploy the changed zips + catalog.json
+# to Hostinger. Weekly, plus on-demand (workflow_dispatch with force=true to
+# rebuild everything regardless of change detection).
+
+on:
+  schedule:
+    - cron: "0 7 * * 1"   # Mondays 07:00 UTC (after the observatory's 06:00 run)
+  workflow_dispatch:
+    inputs:
+      force:
+        description: "Rebuild every pack regardless of change detection"
+        type: boolean
+        default: false
+
+concurrency:
+  group: refresh-packs
+  cancel-in-progress: false
+
+permissions:
+  contents: write          # commit state.json back
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0   # state.json commit-back needs full history
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install jcodemunch-mcp
+        run: pip install --upgrade jcodemunch-mcp
+
+      - name: Build packs (index changed repos)
+        env:
+          # Raise GitHub API limits for jcm's repo indexer.
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: python build_pack.py ${{ inputs.force && '--force' || '' }}
+
+      - name: Deploy changed zips + catalog to Hostinger
+        if: ${{ hashFiles('dist/*.zip') != '' }}
+        uses: wlixcc/SFTP-Deploy-Action@v1.2.6
+        with:
+          server: ${{ secrets.HOSTINGER_SFTP_HOST }}
+          username: ${{ secrets.HOSTINGER_SFTP_USER }}
+          password: ${{ secrets.HOSTINGER_SFTP_PASS }}
+          port: ${{ secrets.HOSTINGER_SFTP_PORT || 22 }}
+          local_path: "./dist/*"
+          # The packs/ dir served by api/index.php (catalog.json sits beside it,
+          # one level up, where the API reads it). Adjust to your deploy root.
+          remote_path: ${{ secrets.HOSTINGER_PACKS_PATH }}
+          delete_remote_files: false
+
+      - name: Commit refreshed state
+        run: |
+          if [[ -n "$(git status --porcelain state.json)" ]]; then
+            git config user.name "pack-refresh-bot"
+            git config user.email "bot@users.noreply.github.com"
+            git add state.json
+            git commit -m "state: refresh pack build markers ($(date -u +%Y-%m-%d))"
+            git push
+          else
+            echo "no state change"
+          fi

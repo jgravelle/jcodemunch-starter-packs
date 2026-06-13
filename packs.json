@@ -1,0 +1,75 @@
+{
+  "_comment": "Source of truth for the Starter Pack catalog. The builder computes symbols/size/version per pack at build time; only id/name/description/free/repos are authored here. repos use GitHub owner/name slugs (also the jcm repo_id).",
+  "packs": [
+    {
+      "id": "nodejs",
+      "name": "Node.js Essentials",
+      "description": "Pre-indexed: Node.js core, Express 4.x, Fastify, and Koa.",
+      "free": true,
+      "repos": ["nodejs/node", "expressjs/express", "fastify/fastify", "koajs/koa"]
+    },
+    {
+      "id": "fastapi",
+      "name": "FastAPI",
+      "description": "Complete FastAPI framework index. Routing, DI, security, and middleware.",
+      "free": false,
+      "repos": ["fastapi/fastapi"]
+    },
+    {
+      "id": "django",
+      "name": "Django",
+      "description": "Django framework index. ORM, views, middleware, auth, admin.",
+      "free": false,
+      "repos": ["django/django"]
+    },
+    {
+      "id": "flask",
+      "name": "Flask",
+      "description": "Flask micro-framework index. Core, Blueprints, Jinja2 integration, CLI.",
+      "free": false,
+      "repos": ["pallets/flask"]
+    },
+    {
+      "id": "react",
+      "name": "React",
+      "description": "React core + ReactDOM index. Hooks, reconciler, fiber, events.",
+      "free": false,
+      "repos": ["facebook/react"]
+    },
+    {
+      "id": "langchain",
+      "name": "LangChain",
+      "description": "LangChain Python index. Chains, agents, retrievers, memory, output parsers.",
+      "free": false,
+      "repos": ["langchain-ai/langchain"]
+    },
+    {
+      "id": "laravel",
+      "name": "Laravel",
+      "description": "Laravel framework index. Eloquent, Blade, routing, middleware, queues, events.",
+      "free": false,
+      "repos": ["laravel/framework"]
+    },
+    {
+      "id": "spring-boot",
+      "name": "Spring Boot",
+      "description": "Spring Boot index. Auto-config, actuator, web, data, security starters.",
+      "free": false,
+      "repos": ["spring-projects/spring-boot"]
+    },
+    {
+      "id": "anthropic-sdk",
+      "name": "Anthropic SDK (Python + TS)",
+      "description": "Official Anthropic Python and TypeScript SDK index. Messages, streaming, tools, batches.",
+      "free": false,
+      "repos": ["anthropics/anthropic-sdk-python", "anthropics/anthropic-sdk-typescript"]
+    },
+    {
+      "id": "mcp-sdk",
+      "name": "MCP SDK (Python + TS)",
+      "description": "Model Context Protocol SDK index. Server, client, transports, tool definitions.",
+      "free": false,
+      "repos": ["modelcontextprotocol/python-sdk", "modelcontextprotocol/typescript-sdk"]
+    }
+  ]
+}

@@ -1,0 +1,6 @@
+# Built artifacts — regenerated each run, deployed via SFTP, never committed.
+dist/
+
+# state.json is intentionally committed (change-detection persistence).
+__pycache__/
+*.pyc
