@@ -60,18 +60,52 @@ hardcoded registry if the file isn't there.
 | Secret | Value |
 |--------|-------|
 | `HOSTINGER_SFTP_HOST` | Hostinger SFTP host |
-| `HOSTINGER_SFTP_USER` | SFTP username |
-| `HOSTINGER_SFTP_PASS` | SFTP password |
-| `HOSTINGER_SFTP_PORT` | SFTP port (optional; defaults to 22) |
-| `HOSTINGER_PACKS_PATH` | Absolute path to the served `packs/` dir, e.g. `/home/<user>/public_html/jCodeMunch/starter-packs-system/packs` |
+| `HOSTINGER_SFTP_USER` | SSH username, from hPanel -> Advanced -> SSH Access |
+| `HOSTINGER_SFTP_PASS` | That SSH account's password |
+| `HOSTINGER_SFTP_PORT` | **`65002`** on Hostinger shared hosting |
+| `HOSTINGER_PACKS_PATH` | Absolute path to the served `packs/` dir, e.g. `/home/<user>/domains/<domain>/public_html/starter-packs-system/packs` |
 
-The `GITHUB_TOKEN` the workflow already has is passed to jcm's indexer to raise
-GitHub API limits while indexing.
+Three things that will waste a run each if you guess them:
+
+- **Port 65002, not 22.** Port 22 times out. FTP accounts (port 21) are useless
+  here — the deploy action speaks SFTP over SSH, so the credentials must come
+  from the SSH Access panel, and SSH must be enabled for the account.
+- **Do not use `~/public_html`.** On a multi-domain account it is a symlink to
+  whichever domain was provisioned first, which may not be the one you want. Go
+  through `domains/<domain>/public_html` explicitly. The hPanel file manager
+  follows the same symlink, so its breadcrumb looks correct while pointing at
+  the wrong site.
+- **A wrong path with a leading `/` resolves from the filesystem root**, so the
+  failure reads `mkdir: cannot create directory '/public_html': Permission
+  denied` rather than anything about your account.
+
+Settle the path with one command instead of guessing:
+
+```bash
+ssh -p 65002 <user>@<host> "ls -d ~/domains/*/public_html/starter-packs-system"
+```
+
+Indexing needs **no** GitHub API token. `build_pack.py` shallow-clones each repo
+and indexes the working tree, which costs zero API quota — see the note in
+`_run_index` for why the API path is unusable in CI.
 
 ## Bootstrap
 
+Done 2026-07-30; kept as the recovery procedure.
+
 1. Push this repo to `jgravelle/jcodemunch-starter-packs`.
 2. Add the secrets above.
-3. Run the workflow once (`force=true`) to rebuild all packs and seed `state.json`.
-4. Confirm `validate.php`-gated downloads still work and the console's
+3. Deploy `starter-packs-system/api/index.php`.
+4. Run the workflow once (`force=true`) to rebuild all packs and seed `state.json`.
+5. Confirm `validate.php`-gated downloads still work and the console's
    Starter Packs rail shows the new date versions.
+
+Verify at the served endpoint, not at the CI step — a green deploy proves files
+moved, not that they landed where `index.php` reads them:
+
+```bash
+curl -s "https://jcodemunch.com/starter-packs-system/api/index.php?action=catalog"
+```
+
+The hardcoded fallback registry pins every pack at `1.0.0`, so a date version in
+that response is proof `catalog.json` is being read.
