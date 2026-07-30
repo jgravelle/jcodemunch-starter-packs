@@ -28,6 +28,7 @@ import datetime
 import json
 import os
 import shutil
+import stat
 import subprocess
 import sys
 import tempfile
@@ -88,9 +89,66 @@ def _list_repos() -> dict:
         return {}
 
 
+def _rmtree(path: Path) -> None:
+    """Delete a tree, including git's read-only pack files on Windows.
+
+    `shutil.rmtree(..., ignore_errors=True)` is not usable here: git marks
+    objects read-only, rmtree raises PermissionError, and ignore_errors drops it
+    on the floor leaving the directory in place -- so the next clone dies with
+    "destination path already exists". Chmod and retry per entry instead.
+    """
+    if not path.exists():
+        return
+
+    def _retry(func, p, _excinfo):
+        try:
+            os.chmod(p, stat.S_IWRITE)
+            func(p)
+        except OSError:
+            pass
+
+    try:
+        shutil.rmtree(path, onexc=_retry)          # Python 3.12+
+    except TypeError:                              # 3.11 and earlier
+        shutil.rmtree(path, onerror=_retry)
+
+
 def _run_index(repo: str) -> None:
-    print(f"  indexing {repo} ...", flush=True)
-    subprocess.run([MCP_BIN, "index", repo], check=True)
+    """Index a repo from a shallow clone rather than through the GitHub API.
+
+    The API path costs roughly one request per tree and blob. On a runner the
+    Actions-issued GITHUB_TOKEN is capped at 1,000 requests/hour per repository,
+    and indexing nodejs/node alone exhausted it -- every later repo 403'd and the
+    whole run built nothing while still reporting success.
+
+    Cloning costs zero API quota. jcm resolves identity from
+    `git remote get-url origin`, so a clone of owner/repo indexes as owner/repo
+    and writes <index-dir>/owner-repo.db, the same file the API path produced.
+    The clone is shallow and discarded as soon as the index is written, so peak
+    disk is one repo, not ten.
+    """
+    # The clone path must be STABLE across runs, not a random temp dir. jcm keys
+    # an index to the working tree that produced it and refuses a second tree
+    # under the same identity ("would overwrite it"), so a fresh mktemp path
+    # every run fails every pack as soon as the index dir isn't empty. A fixed
+    # path per repo makes the re-index an update instead of a collision.
+    clone = Path(tempfile.gettempdir()) / "jcm-pack-clones" / repo.replace("/", "-")
+    _rmtree(clone)
+    clone.parent.mkdir(parents=True, exist_ok=True)
+    try:
+        print(f"  cloning {repo} ...", flush=True)
+        subprocess.run(
+            ["git", "clone", "--depth", "1", "--quiet",
+             f"https://github.com/{repo}", str(clone)],
+            check=True,
+        )
+        print(f"  indexing {repo} ...", flush=True)
+        subprocess.run([MCP_BIN, "index", str(clone)], check=True)
+    finally:
+        # Discard immediately so peak disk is one repo, not ten. Deleting is
+        # safe: the next run recreates the identical path, which is what keeps
+        # the identity check happy.
+        _rmtree(clone)
 
 
 def _load(path: Path, default):
@@ -110,7 +168,7 @@ def build(no_index: bool, force: bool) -> int:
     today = datetime.date.today().strftime("%Y.%m.%d")
     DIST.mkdir(exist_ok=True)
 
-    catalog, changed = [], []
+    catalog, changed, failed = [], [], []
     for pack in defs:
         pid = pack["id"]
         repos = pack["repos"]
@@ -135,7 +193,8 @@ def build(no_index: bool, force: bool) -> int:
                     for r in repos:
                         _run_index(r)
                 except subprocess.CalledProcessError as e:
-                    print(f"  ! index failed for {pid}: {e} -- keeping prior pack")
+                    print(f"::warning::index failed for {pid}: {e} -- keeping prior pack")
+                    failed.append(pid)
                     if prev_cat:
                         catalog.append(prev_cat)
                     continue
@@ -143,7 +202,8 @@ def build(no_index: bool, force: bool) -> int:
             dbs = {r: _db_path(r) for r in repos}
             missing = [r for r, p in dbs.items() if not p.exists()]
             if missing:
-                print(f"  ! missing index db for {missing} -- skipping {pid}")
+                print(f"::warning::missing index db for {missing} -- skipping {pid}")
+                failed.append(pid)
                 if prev_cat:
                     catalog.append(prev_cat)
                 continue
@@ -219,7 +279,17 @@ def build(no_index: bool, force: bool) -> int:
     )
     STATE_FILE.write_text(json.dumps(state, indent=2), encoding="utf-8")
     print(f"\nchanged packs: {', '.join(changed) if changed else 'none'}")
+    if failed:
+        print(f"failed packs: {', '.join(failed)}")
     print(f"catalog -> {DIST / 'catalog.json'}")
+
+    # A run where every attempted pack failed built nothing and deployed nothing.
+    # Exiting 0 there is what let a rate-limited run report success. Partial
+    # failure stays a warning on purpose: one bad upstream must not discard the
+    # packs that did build, since a non-zero exit here skips the deploy step.
+    if failed and not changed:
+        print(f"::error::no pack built; {len(failed)} failed")
+        return 1
     return 0
 
 
