@@ -52,8 +52,9 @@ jobs:
           password: ${{ secrets.HOSTINGER_SFTP_PASS }}
           port: ${{ secrets.HOSTINGER_SFTP_PORT || 22 }}
           local_path: "./dist/*"
-          # The packs/ dir served by api/index.php (catalog.json sits beside it,
-          # one level up, where the API reads it). Adjust to your deploy root.
+          # Absolute path to the packs/ dir api/index.php serves, i.e.
+          # <deploy-root>/starter-packs-system/packs. catalog.json lands IN it,
+          # beside the zips, which is where load_pack_registry() reads it.
           remote_path: ${{ secrets.HOSTINGER_PACKS_PATH }}
           delete_remote_files: false
 
