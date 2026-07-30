@@ -64,6 +64,13 @@ jobs:
           remote_path: ${{ secrets.HOSTINGER_PACKS_PATH }}
           delete_remote_files: false
 
+      # A successful transfer proves bytes moved, not that the served API reads
+      # where they landed. Those came apart silently once already, so the job
+      # now asks the API the same question a user's `install-pack` asks.
+      - name: Verify the live catalog serves what we built
+        if: ${{ hashFiles('dist/*.zip') != '' }}
+        run: python verify_deploy.py
+
       - name: Commit refreshed state
         run: |
           if [[ -n "$(git status --porcelain state.json)" ]]; then
