@@ -1,8 +1,13 @@
 {
   "nodejs": {
-    "version": "2026.06.13",
-    "engine": "jcodemunch-mcp 1.108.55",
-    "repos": {},
+    "version": "2026.07.30",
+    "engine": "1.108.200",
+    "repos": {
+      "nodejs/node": "f9e2fe059734f130717910ddd95d52c9f20c2762",
+      "expressjs/express": "a3714473feb3d2908add734d340e7755fd85e0a3",
+      "fastify/fastify": "0e9a3b35d8b13c9f261bf29bef46168a5d43c28f",
+      "koajs/koa": "52d5e8ff5ac79f2479463b53df2999900ae95115"
+    },
     "catalog": {
       "id": "nodejs",
       "name": "Node.js Essentials",
@@ -14,18 +19,20 @@
         "koajs/koa"
       ],
       "free": true,
-      "version": "2026.06.13",
+      "version": "2026.07.30",
       "filename": "nodejs.zip",
-      "symbols": 76736,
-      "size_mb": 11.16,
-      "size": "11.16 MB",
-      "indexed_date": "2026.06.13"
+      "symbols": 50962,
+      "size_mb": 7.8,
+      "size": "7.8 MB",
+      "indexed_date": "2026.07.30"
     }
   },
   "fastapi": {
-    "version": "2026.06.13",
-    "engine": "jcodemunch-mcp 1.108.55",
-    "repos": {},
+    "version": "2026.07.30",
+    "engine": "1.108.200",
+    "repos": {
+      "fastapi/fastapi": "95f8322ee1dcda7ceace7b1c4f6c9915b36d748f"
+    },
     "catalog": {
       "id": "fastapi",
       "name": "FastAPI",
@@ -34,18 +41,20 @@
         "fastapi/fastapi"
       ],
       "free": false,
-      "version": "2026.06.13",
+      "version": "2026.07.30",
       "filename": "fastapi.zip",
-      "symbols": 5325,
-      "size_mb": 0.94,
-      "size": "0.94 MB",
-      "indexed_date": "2026.06.13"
+      "symbols": 13405,
+      "size_mb": 1.89,
+      "size": "1.89 MB",
+      "indexed_date": "2026.07.30"
     }
   },
   "django": {
-    "version": "2026.06.13",
-    "engine": "jcodemunch-mcp 1.108.55",
-    "repos": {},
+    "version": "2026.07.30",
+    "engine": "1.108.200",
+    "repos": {
+      "django/django": "50d706d0aebcc2d073c8d034b6e22fc98fad49f2"
+    },
     "catalog": {
       "id": "django",
       "name": "Django",
@@ -54,18 +63,20 @@
         "django/django"
       ],
       "free": false,
-      "version": "2026.06.13",
+      "version": "2026.07.30",
       "filename": "django.zip",
-      "symbols": 44260,
-      "size_mb": 7.44,
-      "size": "7.44 MB",
-      "indexed_date": "2026.06.13"
+      "symbols": 38337,
+      "size_mb": 6.52,
+      "size": "6.52 MB",
+      "indexed_date": "2026.07.30"
     }
   },
   "flask": {
-    "version": "2026.06.13",
-    "engine": "jcodemunch-mcp 1.108.55",
-    "repos": {},
+    "version": "2026.07.30",
+    "engine": "1.108.200",
+    "repos": {
+      "pallets/flask": "6a2f545bfd8ed31e19066a299296917e034aca58"
+    },
     "catalog": {
       "id": "flask",
       "name": "Flask",
@@ -74,18 +85,20 @@
         "pallets/flask"
       ],
       "free": false,
-      "version": "2026.06.13",
+      "version": "2026.07.30",
       "filename": "flask.zip",
-      "symbols": 1942,
-      "size_mb": 0.35,
-      "size": "0.35 MB",
-      "indexed_date": "2026.06.13"
+      "symbols": 2152,
+      "size_mb": 0.38,
+      "size": "0.38 MB",
+      "indexed_date": "2026.07.30"
     }
   },
   "react": {
-    "version": "2026.06.13",
-    "engine": "jcodemunch-mcp 1.108.55",
-    "repos": {},
+    "version": "2026.07.30",
+    "engine": "1.108.200",
+    "repos": {
+      "facebook/react": "6cb4322d65f4c68daa183df24b5f81668cedab14"
+    },
     "catalog": {
       "id": "react",
       "name": "React",
@@ -94,18 +107,20 @@
         "facebook/react"
       ],
       "free": false,
-      "version": "2026.06.13",
+      "version": "2026.07.30",
       "filename": "react.zip",
-      "symbols": 24005,
-      "size_mb": 3.18,
-      "size": "3.18 MB",
-      "indexed_date": "2026.06.13"
+      "symbols": 43663,
+      "size_mb": 5.79,
+      "size": "5.79 MB",
+      "indexed_date": "2026.07.30"
     }
   },
   "langchain": {
-    "version": "2026.06.13",
-    "engine": "jcodemunch-mcp 1.108.55",
-    "repos": {},
+    "version": "2026.07.30",
+    "engine": "1.108.200",
+    "repos": {
+      "langchain-ai/langchain": "a1a1ad3bb3eb6cf7680b39ff0fb37f7150393a25"
+    },
     "catalog": {
       "id": "langchain",
       "name": "LangChain",
@@ -114,18 +129,20 @@
         "langchain-ai/langchain"
       ],
       "free": false,
-      "version": "2026.06.13",
+      "version": "2026.07.30",
       "filename": "langchain.zip",
-      "symbols": 10406,
-      "size_mb": 2.05,
-      "size": "2.05 MB",
-      "indexed_date": "2026.06.13"
+      "symbols": 15986,
+      "size_mb": 3.09,
+      "size": "3.09 MB",
+      "indexed_date": "2026.07.30"
     }
   },
   "laravel": {
-    "version": "2026.06.13",
-    "engine": "jcodemunch-mcp 1.108.55",
-    "repos": {},
+    "version": "2026.07.30",
+    "engine": "1.108.200",
+    "repos": {
+      "laravel/framework": "7e5b3aff7dcc0843758cc0ad83c383aab84596b8"
+    },
     "catalog": {
       "id": "laravel",
       "name": "Laravel",
@@ -134,18 +151,20 @@
         "laravel/framework"
       ],
       "free": false,
-      "version": "2026.06.13",
+      "version": "2026.07.30",
       "filename": "laravel.zip",
-      "symbols": 34432,
-      "size_mb": 5.75,
-      "size": "5.75 MB",
-      "indexed_date": "2026.06.13"
+      "symbols": 23025,
+      "size_mb": 3.95,
+      "size": "3.95 MB",
+      "indexed_date": "2026.07.30"
     }
   },
   "spring-boot": {
-    "version": "2026.06.13",
-    "engine": "jcodemunch-mcp 1.108.55",
-    "repos": {},
+    "version": "2026.07.30",
+    "engine": "1.108.200",
+    "repos": {
+      "spring-projects/spring-boot": "941045a2f4db88207f3475e25753a58cf50e3943"
+    },
     "catalog": {
       "id": "spring-boot",
       "name": "Spring Boot",
@@ -154,18 +173,21 @@
         "spring-projects/spring-boot"
       ],
       "free": false,
-      "version": "2026.06.13",
+      "version": "2026.07.30",
       "filename": "spring-boot.zip",
-      "symbols": 33977,
-      "size_mb": 7.08,
-      "size": "7.08 MB",
-      "indexed_date": "2026.06.13"
+      "symbols": 8313,
+      "size_mb": 1.64,
+      "size": "1.64 MB",
+      "indexed_date": "2026.07.30"
     }
   },
   "mcp-sdk": {
-    "version": "2026.06.13",
-    "engine": "jcodemunch-mcp 1.108.55",
-    "repos": {},
+    "version": "2026.07.30",
+    "engine": "1.108.200",
+    "repos": {
+      "modelcontextprotocol/python-sdk": "a4f4ccd091138771535e17191123f20b30fda68e",
+      "modelcontextprotocol/typescript-sdk": "cc4b41617ce3601b1290d67216ea0b194a3cd9ac"
+    },
     "catalog": {
       "id": "mcp-sdk",
       "name": "MCP SDK (Python + TS)",
@@ -175,12 +197,36 @@
         "modelcontextprotocol/typescript-sdk"
       ],
       "free": false,
-      "version": "2026.06.13",
+      "version": "2026.07.30",
       "filename": "mcp-sdk.zip",
-      "symbols": 19948,
-      "size_mb": 2.67,
-      "size": "2.67 MB",
-      "indexed_date": "2026.06.13"
+      "symbols": 40973,
+      "size_mb": 6.09,
+      "size": "6.09 MB",
+      "indexed_date": "2026.07.30"
+    }
+  },
+  "anthropic-sdk": {
+    "version": "2026.07.30",
+    "engine": "1.108.200",
+    "repos": {
+      "anthropics/anthropic-sdk-python": "f5c30d0490fb7bcd8e0b65d8d8e63c0e7d1bfe59",
+      "anthropics/anthropic-sdk-typescript": "3b45cd3b69c956ac63384fdb09ce1d8109f3fa80"
+    },
+    "catalog": {
+      "id": "anthropic-sdk",
+      "name": "Anthropic SDK (Python + TS)",
+      "description": "Official Anthropic Python and TypeScript SDK index. Messages, streaming, tools, batches.",
+      "repos": [
+        "anthropics/anthropic-sdk-python",
+        "anthropics/anthropic-sdk-typescript"
+      ],
+      "free": false,
+      "version": "2026.07.30",
+      "filename": "anthropic-sdk.zip",
+      "symbols": 15357,
+      "size_mb": 2.61,
+      "size": "2.61 MB",
+      "indexed_date": "2026.07.30"
     }
   }
 }
