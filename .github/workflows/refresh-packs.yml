@@ -4,6 +4,12 @@ name: refresh-packs
 # whose jcm engine version changed, then deploy the changed zips + catalog.json
 # to Hostinger. Weekly, plus on-demand (workflow_dispatch with force=true to
 # rebuild everything regardless of change detection).
+#
+# Required repo secrets for the deploy step:
+#   HOSTINGER_SFTP_HOST / _USER / _PASS   SFTP credentials
+#   HOSTINGER_SFTP_PORT                   optional, defaults to 22
+#   HOSTINGER_PACKS_PATH                  absolute path to the served packs/ dir
+# Without them the build still runs; only the deploy step fails.
 
 on:
   schedule:
