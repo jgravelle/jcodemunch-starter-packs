@@ -14,11 +14,51 @@ prefix that jcm's `install-pack` strips on extract.
 
 | File | Role |
 |------|------|
-| `packs.json` | Source of truth: pack id / name / description / free / repos. Symbols, size, and version are computed at build time. |
-| `build_pack.py` | The builder. Indexes changed repos, packages `.db` files, writes `dist/<pack-id>.zip` + `dist/catalog.json`, updates `state.json`. |
-| `state.json` | Change-detection state (per-pack last-built upstream shas, jcm engine version, version). Committed back by CI. |
-| `.github/workflows/refresh-packs.yml` | Weekly + on-demand workflow: build, SFTP-deploy, commit state. |
+| `packs.json` | Source of truth: pack id / name / description / free / repos, plus `repo_licenses`. Symbols, size, and version are computed at build time. |
+| `build_pack.py` | The builder. Indexes changed repos, packages `.db` files and each repo's attribution, writes `dist/<pack-id>.zip` + `dist/catalog.json`, updates `state.json`. |
+| `test_build_pack.py` | Tests for the attribution gate. CI runs them before anything is cloned. |
+| `state.json` | Change-detection state (per-pack last-built upstream shas, jcm engine version, version) **and `repo_license_digests`**, the record of which attribution each pack was built against. Committed back by CI. |
+| `.github/workflows/refresh-packs.yml` | Weekly + on-demand workflow: test, build, SFTP-deploy, verify the live catalog, commit state. |
 | `dist/` | Build output (gitignored). Uploaded to Hostinger. |
+| `.license-cache/` | Working copy of the attribution files pulled from each clone (gitignored; `state.json` holds the durable record). |
+
+## Attribution
+
+Every packed repo is third-party open source and nine of the ten packs are sold,
+so each pack ships the upstream licence and attribution files **verbatim**, under
+`licenses/<owner>-<name>/` inside the archive. `manifest.json` records, per repo,
+the SPDX id, the files carried, a digest over them, and the commit the pack was
+built from.
+
+`repo_licenses` in `packs.json` is a **tripwire, not the source of truth**. The
+builder copies whatever attribution files the clone actually has and refuses to
+package a repo when either:
+
+- **no licence file exists at its root** — we would be redistributing someone's
+  work with nothing attached; or
+- **the attribution bytes changed since the last build.** Usually that is a
+  copyright year, but a relicensing looks identical from here, and the one case
+  that must never be handled automatically is a repo moving to terms that forbid
+  what the pack does. A blocked pack keeps shipping its previous build, which is
+  the safe direction: we already had the rights that one was built under.
+
+To accept a change, read the upstream diff, then update that repo's entry in
+`state.json`'s `repo_license_digests` to the digest the error message prints.
+
+Two repos are worth knowing about, both flagged in `packs.json`:
+
+- **`nodejs/node`** — its `LICENSE` is a 157 KB compendium, MIT for Node itself
+  followed by the licences of every bundled dependency (V8, ICU, OpenSSL and
+  others). GitHub's own detector returns `NOASSERTION`. It ships whole; do not
+  summarise it as MIT.
+- **`modelcontextprotocol/typescript-sdk`** — mid-relicensing from MIT to
+  Apache-2.0, with per-contribution status varying and documentation under
+  CC-BY-4.0. Also `NOASSERTION`. The digest tripwire will fire when the
+  transition completes.
+
+Attribution files are matched at the **clone root only**. `django/django` carries
+hundreds of `LICENSE` files in test fixtures and vendored trees, and sweeping
+those in would bury the one that governs the code we ship.
 
 ## Change detection + versioning
 

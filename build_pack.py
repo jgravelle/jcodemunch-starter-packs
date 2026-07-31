@@ -25,8 +25,10 @@ from __future__ import annotations
 
 import argparse
 import datetime
+import hashlib
 import json
 import os
+import re
 import shutil
 import stat
 import subprocess
@@ -113,6 +115,66 @@ def _rmtree(path: Path) -> None:
         shutil.rmtree(path, onerror=_retry)
 
 
+# Attribution files a permissive licence obliges us to carry with a copy. Matched
+# at the CLONE ROOT only: a repo like django/django has hundreds of LICENSE files
+# in test fixtures and vendored trees, and sweeping those in would bury the one
+# that governs the code we ship.
+_ATTRIBUTION_RE = re.compile(
+    r"^(LICEN[SC]E|NOTICE|COPYING|COPYRIGHT|AUTHORS|PATENTS|THIRD[-_]PARTY)"
+    r"[-_.A-Za-z0-9]*$",
+    re.IGNORECASE,
+)
+
+LICENSE_CACHE = ROOT / ".license-cache"
+
+
+def collect_attribution_files(clone: Path) -> list[tuple[str, bytes]]:
+    """Attribution files at a clone's root, sorted, as (name, bytes).
+
+    Pure over a directory so it is testable without cloning anything. Reads
+    bytes rather than text: these files are copied verbatim, and decoding them
+    would risk a re-encode changing the very bytes we are attesting to.
+    """
+    if not clone.is_dir():
+        return []
+    found = []
+    for entry in sorted(clone.iterdir(), key=lambda p: p.name):
+        if entry.is_file() and _ATTRIBUTION_RE.match(entry.name):
+            found.append((entry.name, entry.read_bytes()))
+    return found
+
+
+def attribution_digest(files: list[tuple[str, bytes]]) -> str:
+    """One sha256 over the whole attribution set: names and bytes.
+
+    Covers a licence file being ADDED or REMOVED as well as edited, so a repo
+    that quietly drops its NOTICE is as visible as one that rewrites its LICENSE.
+    """
+    h = hashlib.sha256()
+    for name, data in files:
+        h.update(name.encode("utf-8"))
+        h.update(b"\0")
+        h.update(hashlib.sha256(data).digest())
+    return h.hexdigest()
+
+
+def _cache_attribution(repo: str, files: list[tuple[str, bytes]]) -> None:
+    """Persist a repo's attribution files, since the clone is discarded at once."""
+    dest = LICENSE_CACHE / repo.replace("/", "-")
+    if dest.exists():
+        shutil.rmtree(dest, ignore_errors=True)
+    dest.mkdir(parents=True, exist_ok=True)
+    for name, data in files:
+        (dest / name).write_bytes(data)
+
+
+def _cached_attribution(repo: str) -> list[tuple[str, bytes]]:
+    src = LICENSE_CACHE / repo.replace("/", "-")
+    if not src.is_dir():
+        return []
+    return [(p.name, p.read_bytes()) for p in sorted(src.iterdir()) if p.is_file()]
+
+
 def _run_index(repo: str) -> None:
     """Index a repo from a shallow clone rather than through the GitHub API.
 
@@ -142,6 +204,9 @@ def _run_index(repo: str) -> None:
              f"https://github.com/{repo}", str(clone)],
             check=True,
         )
+        # Capture attribution BEFORE indexing, so a failing index still leaves
+        # the licence evidence behind for the next run to compare against.
+        _cache_attribution(repo, collect_attribution_files(clone))
         print(f"  indexing {repo} ...", flush=True)
         subprocess.run([MCP_BIN, "index", str(clone)], check=True)
     finally:
@@ -158,12 +223,53 @@ def _load(path: Path, default):
         return default
 
 
+def check_attribution(repo: str, declared: dict | None, prev_digest: str | None):
+    """Gate a repo's attribution before its code can be packaged.
+
+    Returns ``(files, digest, error)``. ``error`` is a string when the pack must
+    NOT be rebuilt, in which case the previously built pack keeps shipping --
+    the safe direction, since we already had the rights it was built under.
+
+    Two failures block:
+
+    * **No licence file at all.** We would be redistributing someone's work with
+      nothing attached.
+    * **The attribution bytes changed since the last build.** Usually harmless
+      (a copyright year), but relicensing looks identical from here, and the one
+      case we must never handle automatically is a repo moving to terms that
+      forbid what the pack does. A human looks, then bumps the digest.
+    """
+    files = _cached_attribution(repo)
+    if not files:
+        return [], "", (
+            f"no LICENSE/NOTICE/AUTHORS file found at the root of {repo}; "
+            f"refusing to package it"
+        )
+
+    digest = attribution_digest(files)
+    if declared is None:
+        return files, digest, f"{repo} has no entry in packs.json repo_licenses"
+
+    if prev_digest and prev_digest != digest:
+        names = ", ".join(n for n, _ in files)
+        return files, digest, (
+            f"attribution for {repo} changed since the last build "
+            f"({names}). Declared: {declared.get('spdx')}. Review the upstream "
+            f"licence, then update repo_license_digests in state.json to "
+            f"{digest[:16]}... to accept it"
+        )
+    return files, digest, None
+
+
 def build(no_index: bool, force: bool) -> int:
-    defs = _load(PACKS_DEF, {}).get("packs", [])
+    packs_doc = _load(PACKS_DEF, {})
+    defs = packs_doc.get("packs", [])
+    licenses = packs_doc.get("repo_licenses", {})
     if not defs:
         print("no packs defined in packs.json", file=sys.stderr)
         return 1
     state = _load(STATE_FILE, {})
+    digests = state.setdefault("repo_license_digests", {})
     engine = _jcm_version()
     today = datetime.date.today().strftime("%Y.%m.%d")
     DIST.mkdir(exist_ok=True)
@@ -208,6 +314,25 @@ def build(no_index: bool, force: bool) -> int:
                     catalog.append(prev_cat)
                 continue
 
+            # Attribution gate. Runs after indexing (which is what populates the
+            # licence cache) and before anything is packaged, so a repo we may
+            # not redistribute never reaches a zip.
+            attribution, blocked = {}, None
+            for r in repos:
+                files, digest, err = check_attribution(
+                    r, licenses.get(r), digests.get(r)
+                )
+                if err:
+                    blocked = err
+                    break
+                attribution[r] = (files, digest)
+            if blocked:
+                print(f"::error::{pid}: {blocked}")
+                failed.append(pid)
+                if prev_cat:
+                    catalog.append(prev_cat)
+                continue
+
             repo_meta = _list_repos()
             symbols = sum(int(repo_meta.get(r, {}).get("symbol_count", 0)) for r in repos)
             version = today
@@ -217,6 +342,27 @@ def build(no_index: bool, force: bool) -> int:
                 staging.mkdir()
                 for r, p in dbs.items():
                     shutil.copy2(p, staging / p.name)
+
+                # Attribution travels inside the pack, one directory per repo,
+                # byte-for-byte as upstream published it.
+                licence_block = []
+                for r in repos:
+                    files, digest = attribution[r]
+                    slug = r.replace("/", "-")
+                    ldir = staging / "licenses" / slug
+                    ldir.mkdir(parents=True, exist_ok=True)
+                    for fname, data in files:
+                        (ldir / fname).write_bytes(data)
+                    licence_block.append({
+                        "repo": r,
+                        "spdx": (licenses.get(r) or {}).get("spdx", ""),
+                        "note": (licenses.get(r) or {}).get("note", ""),
+                        "files": [f"licenses/{slug}/{n}" for n, _ in files],
+                        "digest": digest,
+                        "commit": cur_sha.get(r) or "",
+                    })
+                    digests[r] = digest
+
                 manifest = {
                     "pack_id": pid,
                     "name": pack["name"],
@@ -227,6 +373,7 @@ def build(no_index: bool, force: bool) -> int:
                     "format": "jcodemunch-sqlite",
                     "engine": engine,
                     "install_target": "~/.code-index/",
+                    "licenses": licence_block,
                 }
                 (staging / "manifest.json").write_text(json.dumps(manifest, indent=2), encoding="utf-8")
 
@@ -259,6 +406,12 @@ def build(no_index: bool, force: bool) -> int:
             "size_mb": size_mb,
             "size": f"{size_mb} MB",
             "indexed_date": today if need else prev_cat.get("indexed_date", today),
+            # Surfaced in the catalog so `install-pack --list` can name the terms
+            # BEFORE a download, not only after one.
+            "licenses": (
+                [{"repo": b["repo"], "spdx": b["spdx"]} for b in licence_block]
+                if need else prev_cat.get("licenses", [])
+            ),
         }
         catalog.append(entry)
         state.setdefault(pid, {})["catalog"] = entry

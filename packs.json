@@ -1,5 +1,37 @@
 {
   "_comment": "Source of truth for the Starter Pack catalog. The builder computes symbols/size/version per pack at build time; only id/name/description/free/repos are authored here. repos use GitHub owner/name slugs (also the jcm repo_id).",
+
+  "_licence_comment": "Every packed repo is third-party OSS and nine of ten packs are sold, so each pack ships the upstream licence and attribution files VERBATIM. `spdx` here is a TRIPWIRE, not the source of truth: the builder copies whatever files the clone actually has and fails the pack when their bytes change, so a relicensing upstream stops the build instead of shipping quietly. Verified against each repo 2026-07-31; two came back NOASSERTION from GitHub's own detector and are noted below.",
+  "repo_licenses": {
+    "nodejs/node": {
+      "spdx": "MIT",
+      "note": "LICENSE is a 157 KB compendium, not a plain MIT file: MIT for Node itself followed by the licences of every bundled dependency (V8, ICU, OpenSSL, zlib and others). GitHub reports NOASSERTION. Ship it whole; never summarise it as MIT."
+    },
+    "expressjs/express": { "spdx": "MIT" },
+    "fastify/fastify": { "spdx": "MIT" },
+    "koajs/koa": { "spdx": "MIT", "note": "LICENSE plus an AUTHORS file that the copyright line depends on." },
+    "fastapi/fastapi": { "spdx": "MIT" },
+    "django/django": {
+      "spdx": "BSD-3-Clause",
+      "note": "Ships LICENSE, LICENSE.python (PSF, for vendored CPython code) and AUTHORS, which the BSD copyright line refers to. All three travel."
+    },
+    "pallets/flask": { "spdx": "BSD-3-Clause", "note": "Licence file is LICENSE.txt, not LICENSE." },
+    "facebook/react": { "spdx": "MIT" },
+    "langchain-ai/langchain": { "spdx": "MIT" },
+    "laravel/framework": { "spdx": "MIT", "note": "Licence file is LICENSE.md." },
+    "spring-projects/spring-boot": {
+      "spdx": "Apache-2.0",
+      "note": "Apache-2.0 also obliges us to carry a NOTICE file where one exists and to state changes. There is no NOTICE at the repo root as of 2026-07-31, and we make no modifications, so LICENSE.txt alone discharges it. Re-check if a NOTICE appears."
+    },
+    "anthropics/anthropic-sdk-python": { "spdx": "MIT" },
+    "anthropics/anthropic-sdk-typescript": { "spdx": "MIT" },
+    "modelcontextprotocol/python-sdk": { "spdx": "MIT" },
+    "modelcontextprotocol/typescript-sdk": {
+      "spdx": "MIT AND Apache-2.0",
+      "note": "Mid-relicensing: new contributions are Apache-2.0, contributions whose authors have not consented stay MIT, documentation is CC-BY-4.0. GitHub reports NOASSERTION. Re-check when the transition completes; the sha tripwire will fire when it does."
+    }
+  },
+
   "packs": [
     {
       "id": "nodejs",

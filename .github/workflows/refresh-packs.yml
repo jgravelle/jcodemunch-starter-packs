@@ -43,6 +43,13 @@ jobs:
       - name: Install jcodemunch-mcp
         run: pip install --upgrade jcodemunch-mcp
 
+      # The attribution gate decides whether we may redistribute a repo at all,
+      # so it runs before anything is cloned rather than after something ships.
+      - name: Test the attribution gate
+        run: |
+          pip install pytest
+          python -m pytest test_build_pack.py -q
+
       - name: Build packs (index changed repos)
         env:
           # Raise GitHub API limits for jcm's repo indexer.

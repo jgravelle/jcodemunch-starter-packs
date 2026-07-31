@@ -1,6 +1,11 @@
 # Built artifacts — regenerated each run, deployed via SFTP, never committed.
 dist/
 
-# state.json is intentionally committed (change-detection persistence).
+# state.json is intentionally committed (change-detection persistence), and it
+# carries repo_license_digests -- the audit trail for what attribution each pack
+# was built against. The cache below is just the working copy of those files,
+# repopulated from the clone on every build.
+.license-cache/
+
 __pycache__/
 *.pyc
