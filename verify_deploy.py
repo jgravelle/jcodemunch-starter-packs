@@ -29,8 +29,13 @@ DEFAULT_API = "https://jcodemunch.com/starter-packs-system/api/index.php"
 DIST = Path(__file__).resolve().parent / "dist"
 
 
+# The CDN in front of jcodemunch.com answers a bare default header set with a
+# 403 challenge, so every request from here carries the same shape the client
+# sends (jcodemunch-mcp#417).
+_HEADERS = {"User-Agent": "jcm-pack-verify", "X-JCM-Client": "jcm-pack-verify"}
+
 def _fetch(url: str, timeout: float) -> dict:
-    req = urllib.request.Request(url, headers={"User-Agent": "jcm-pack-verify"})
+    req = urllib.request.Request(url, headers=_HEADERS)
     with urllib.request.urlopen(req, timeout=timeout) as resp:
         return json.loads(resp.read())
 
@@ -95,6 +100,45 @@ def main() -> int:
             f"::error::the deploy reported success but {len(missing) + len(stale)} of "
             f"{len(built)} packs are not being served. Check that the deploy target is "
             f"the directory {args.api} reads from."
+        )
+        return 1
+
+    # ⚠ The catalog agreeing is NOT the same as the DOWNLOAD being current.
+    # On 2026-08-07 every check above passed while hcdn served the 2026-08-03
+    # zip for a full day after the deploy -- the build whose indexes delete
+    # themselves on the user's next server start (jcodemunch-mcp#419). The
+    # catalog is generated per request; the zip is a cached object with its own
+    # lifetime, and only one of those is what a user actually receives.
+    #
+    # So ask for the bytes and read the version off the response, the way
+    # `install-pack` does. HEAD, not GET: the header is the whole answer and
+    # the packs run to tens of megabytes.
+    served_stale = []
+    for pid, want in sorted(built.items()):
+        url = f"{args.api}?action=download&pack={pid}"
+        try:
+            req = urllib.request.Request(url, method="HEAD", headers=_HEADERS)
+            with urllib.request.urlopen(req, timeout=args.timeout) as resp:
+                got = resp.headers.get("X-Pack-Version")
+                age = resp.headers.get("Age")
+        except Exception as exc:
+            # A licensed pack answers 403 without a key. That is the paywall
+            # working, not a stale deploy, so it cannot fail this gate.
+            print(f"  {pid:<15s} download not checkable ({exc.__class__.__name__})")
+            continue
+        if got and str(got) != str(want):
+            served_stale.append((pid, want, got, age))
+
+    for pid, want, got, age in served_stale:
+        print(
+            f"::error::pack '{pid}' DOWNLOAD serves v{got} but we built v{want}"
+            + (f" (cache Age={age}s)" if age else "")
+        )
+    if served_stale:
+        print(
+            "::error::the catalog is current but the download is not. This is a CDN "
+            "cache serving a previous build; purge it, and check that download URLs "
+            "carry a per-build cache key."
         )
         return 1
 
