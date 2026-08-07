@@ -276,3 +276,20 @@ def test_build_neutralizes_every_staged_db(tmp_path):
         "a staged .db that keeps its builder path will delete itself on the "
         "user's next server start"
     )
+
+
+def test_blocking_message_carries_the_full_digest(tmp_path, monkeypatch):
+    """The gate message is the ONLY place the new digest is surfaced, and it
+    told you to paste a 16-char prefix into a field of 64-char sha256 values.
+    A prefix never matches, so obeying the instruction blocked the repo forever.
+    """
+    files = [("LICENSE", b"BSD-3-Clause text")]
+    monkeypatch.setattr(bp, "_cached_attribution", lambda repo: files)
+    digest = bp.attribution_digest(files)
+    _f, got, err = bp.check_attribution(
+        "django/django", {"spdx": "BSD-3-Clause"}, prev_digest="0" * 64
+    )
+    assert err and digest in err, (
+        f"blocking message must contain the full {len(digest)}-char digest; got: {err}"
+    )
+    assert "..." not in err.split(digest)[-1][:8]

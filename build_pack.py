@@ -289,7 +289,13 @@ def check_attribution(repo: str, declared: dict | None, prev_digest: str | None)
             f"attribution for {repo} changed since the last build "
             f"({names}). Declared: {declared.get('spdx')}. Review the upstream "
             f"licence, then update repo_license_digests in state.json to "
-            f"{digest[:16]}... to accept it"
+            # ⚠ FULL digest, never truncated. It printed `{digest[:16]}...`
+            # and told the reader to paste that into a field holding
+            # 64-char sha256 values -- a prefix can never match, so
+            # following the instruction literally blocked the repo
+            # permanently. The message is the ONLY place this value is
+            # surfaced, so it has to be complete.
+            f"{digest} to accept it"
         )
     return files, digest, None
 
