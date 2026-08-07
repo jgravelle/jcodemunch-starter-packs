@@ -315,7 +315,7 @@
     "fastify/fastify": "80cb6e1f8d39a0fe56a61ca44b254c9514e442adf0a8a744660a8c051b359ed4",
     "koajs/koa": "884c573fd0e5d6612ef456de383a0d84a7cb66f9c87e45a3c43f36bf955b5b94",
     "fastapi/fastapi": "33d13508a8fbee733d7b731a421a458db2e12ec4a17924f0d96c5708ab4e79e1",
-    "django/django": "f1dc6cef03cf4f52619d65f57e2ff8264c185e5175546945dac2b638b9eba6fb",
+    "django/django": "fecf29b8cc91d720f2021f8dffbd689399295e3788cf3c8ceb0064500ab5d0a3",
     "pallets/flask": "26cb858bcb777bd49fb74df50fad1964c65ae1ac6bb8793707aa03d3ee696104",
     "facebook/react": "b9a239614565cba5f2221d2f2a2b50536fd69b7566f131a5f6b42a0eac43a7a2",
     "langchain-ai/langchain": "40cd4561306153934f040300e76b71798a3bdf8a3770b70ea432bc5d3ac23d61",
