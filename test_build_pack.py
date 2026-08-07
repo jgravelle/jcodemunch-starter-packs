@@ -196,3 +196,83 @@ def test_declared_licences_name_an_spdx_id():
     doc = json.loads((ROOT / "packs.json").read_text(encoding="utf-8"))
     for repo, meta in doc["repo_licenses"].items():
         assert meta.get("spdx"), f"{repo} has no spdx value"
+
+
+# ── builder paths must never ship inside a pack (jcodemunch-mcp#419) ──────────
+#
+# We index from clones under `<tempdir>/jcm-pack-clones/<owner>-<repo>`, and that
+# absolute path lands in each index's `meta`. Shipped as-is it names a directory
+# that exists on this runner and nowhere else, and the client's startup orphan
+# sweep deletes any index whose non-empty `source_root` is not a directory — so
+# every installed pack was destroyed on the next server start (@MotoMato85).
+#
+# The client fixes this too, from 1.108.251. Neutralising here as well is what
+# protects seats on OLDER clients: they receive a pack that was never poisoned.
+# That is the whole reason this is not redundant, so do not delete it as such.
+
+import sqlite3
+
+
+def _mk_index(path, source_root):
+    conn = sqlite3.connect(str(path))
+    conn.execute("CREATE TABLE meta (key TEXT PRIMARY KEY, value TEXT)")
+    conn.executemany(
+        "INSERT INTO meta (key, value) VALUES (?, ?)",
+        [("repo", "expressjs/express"), ("source_root", source_root),
+         ("git_root", source_root), ("indexed_at", "2026-08-06")],
+    )
+    conn.commit()
+    conn.close()
+
+
+def _meta(path, key):
+    conn = sqlite3.connect(f"file:{path}?mode=ro&immutable=1", uri=True)
+    row = conn.execute("SELECT value FROM meta WHERE key = ?", (key,)).fetchone()
+    conn.close()
+    return row[0] if row else None
+
+
+def test_neutralize_blanks_both_path_keys(tmp_path):
+    db = tmp_path / "expressjs-express.db"
+    _mk_index(db, "/tmp/jcm-pack-clones/expressjs-express")
+    bp.neutralize_builder_paths(db)
+    assert _meta(db, "source_root") == ""
+    assert _meta(db, "git_root") == "", (
+        "git_root left set keeps the pack visible to the client's watch-all"
+    )
+
+
+def test_neutralize_leaves_other_meta_intact(tmp_path):
+    """Only the two path keys. Blanking `repo` or `indexed_at` would break the
+    index in a way no client-side repair could undo."""
+    db = tmp_path / "expressjs-express.db"
+    _mk_index(db, "/tmp/jcm-pack-clones/expressjs-express")
+    bp.neutralize_builder_paths(db)
+    assert _meta(db, "repo") == "expressjs/express"
+    assert _meta(db, "indexed_at") == "2026-08-06"
+
+
+def test_neutralize_is_idempotent(tmp_path):
+    """Re-running a build over an already-clean staging copy must be a no-op."""
+    db = tmp_path / "expressjs-express.db"
+    _mk_index(db, "")
+    bp.neutralize_builder_paths(db)
+    bp.neutralize_builder_paths(db)
+    assert _meta(db, "source_root") == ""
+
+
+def test_build_neutralizes_every_staged_db(tmp_path):
+    """The wiring, not just the helper: whatever `build` stages must be cleaned.
+
+    Guards the real regression risk — someone adds a second `shutil.copy2` into
+    staging and forgets the neutralise call beside it.
+    """
+    import inspect
+    src = inspect.getsource(bp.build)
+    copies = src.count("shutil.copy2(")
+    calls = src.count("neutralize_builder_paths(")
+    assert calls >= copies, (
+        f"{copies} staging copies but only {calls} neutralise call(s) in build(); "
+        "a staged .db that keeps its builder path will delete itself on the "
+        "user's next server start"
+    )

@@ -30,6 +30,7 @@ import json
 import os
 import re
 import shutil
+import sqlite3
 import stat
 import subprocess
 import sys
@@ -216,6 +217,38 @@ def _run_index(repo: str) -> None:
         _rmtree(clone)
 
 
+def neutralize_builder_paths(db: Path) -> None:
+    """Blank `source_root` / `git_root` in a STAGED pack index.
+
+    We index from clones under `<tempdir>/jcm-pack-clones/<owner>-<repo>`, and
+    that absolute path lands in each index's `meta`. Shipped as-is it names a
+    directory that exists on this CI runner and nowhere else, and the client's
+    startup sweep deletes any index whose non-empty `source_root` is not a
+    directory — so every installed pack was destroyed on the next server start
+    (jcodemunch-mcp#419, @MotoMato85).
+
+    jcodemunch-mcp 1.108.251 fixes this client-side too, both on install and by
+    repairing indexes already on disk. Doing it HERE as well is what fixes packs
+    for seats running an older client: they simply receive a pack that was never
+    poisoned. That is why this is not redundant with the client fix.
+
+    ⚠ Operates on the STAGING copy only. The builder's own index under
+    `_index_dir()` keeps its real paths so incremental re-indexing still works.
+
+    ⚠ An empty `source_root` is the client's existing, documented meaning of
+    "no local clone backs this index", which is exactly true of a downloaded
+    pack. It is not a sentinel invented for this fix.
+    """
+    conn = sqlite3.connect(str(db))
+    try:
+        conn.execute(
+            "UPDATE meta SET value = '' WHERE key IN ('source_root', 'git_root')"
+        )
+        conn.commit()
+    finally:
+        conn.close()
+
+
 def _load(path: Path, default):
     try:
         return json.loads(path.read_text(encoding="utf-8"))
@@ -341,7 +374,12 @@ def build(no_index: bool, force: bool) -> int:
                 staging = Path(td) / pid
                 staging.mkdir()
                 for r, p in dbs.items():
-                    shutil.copy2(p, staging / p.name)
+                    staged = staging / p.name
+                    shutil.copy2(p, staged)
+                    # Strip this runner's clone paths before the file is zipped.
+                    # See neutralize_builder_paths: shipping them made the
+                    # client's orphan sweep delete every installed pack (#419).
+                    neutralize_builder_paths(staged)
 
                 # Attribution travels inside the pack, one directory per repo,
                 # byte-for-byte as upstream published it.
