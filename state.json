@@ -74,10 +74,10 @@
     }
   },
   "django": {
-    "version": "2026.07.31",
-    "engine": "1.108.204",
+    "version": "2026.08.07",
+    "engine": "1.108.251",
     "repos": {
-      "django/django": "902e5c0fb2d3f0772efbfebc8ff135926a2bb47a"
+      "django/django": "4243ab11dc957fd14a1875e6b715ff5e6114a415"
     },
     "catalog": {
       "id": "django",
@@ -87,12 +87,12 @@
         "django/django"
       ],
       "free": false,
-      "version": "2026.07.31",
+      "version": "2026.08.07",
       "filename": "django.zip",
-      "symbols": 38339,
-      "size_mb": 6.55,
-      "size": "6.55 MB",
-      "indexed_date": "2026.07.31",
+      "symbols": 38412,
+      "size_mb": 6.57,
+      "size": "6.57 MB",
+      "indexed_date": "2026.08.07",
       "licenses": [
         {
           "repo": "django/django",
