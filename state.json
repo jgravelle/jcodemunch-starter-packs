@@ -1,12 +1,12 @@
 {
   "nodejs": {
-    "version": "2026.08.03",
-    "engine": "1.108.224",
+    "version": "2026.08.07",
+    "engine": "1.108.251",
     "repos": {
-      "nodejs/node": "7e439828de88f76d1d91605f9d433ba747a5ba23",
+      "nodejs/node": "9caf674ea72bde60e1d470ac0fab00ac2cdcb1d1",
       "expressjs/express": "a3714473feb3d2908add734d340e7755fd85e0a3",
-      "fastify/fastify": "9ba6d6016fa932118e6cb2a2f68617cab0824f12",
-      "koajs/koa": "52d5e8ff5ac79f2479463b53df2999900ae95115"
+      "fastify/fastify": "a2f590563f111ebc8e92b8f17701909e9b19d4b7",
+      "koajs/koa": "e145325bec7399e3359414badae4a248e7ae1c3b"
     },
     "catalog": {
       "id": "nodejs",
@@ -19,12 +19,12 @@
         "koajs/koa"
       ],
       "free": true,
-      "version": "2026.08.03",
+      "version": "2026.08.07",
       "filename": "nodejs.zip",
-      "symbols": 51349,
-      "size_mb": 7.9,
-      "size": "7.9 MB",
-      "indexed_date": "2026.08.03",
+      "symbols": 51499,
+      "size_mb": 7.94,
+      "size": "7.94 MB",
+      "indexed_date": "2026.08.07",
       "licenses": [
         {
           "repo": "nodejs/node",
@@ -46,10 +46,10 @@
     }
   },
   "fastapi": {
-    "version": "2026.08.03",
-    "engine": "1.108.224",
+    "version": "2026.08.07",
+    "engine": "1.108.251",
     "repos": {
-      "fastapi/fastapi": "95f8322ee1dcda7ceace7b1c4f6c9915b36d748f"
+      "fastapi/fastapi": "a375f6b948b99fa4260129856bbf11d037f363ef"
     },
     "catalog": {
       "id": "fastapi",
@@ -59,12 +59,12 @@
         "fastapi/fastapi"
       ],
       "free": false,
-      "version": "2026.08.03",
+      "version": "2026.08.07",
       "filename": "fastapi.zip",
-      "symbols": 13405,
-      "size_mb": 1.89,
-      "size": "1.89 MB",
-      "indexed_date": "2026.08.03",
+      "symbols": 13364,
+      "size_mb": 1.9,
+      "size": "1.9 MB",
+      "indexed_date": "2026.08.07",
       "licenses": [
         {
           "repo": "fastapi/fastapi",
@@ -102,8 +102,8 @@
     }
   },
   "flask": {
-    "version": "2026.08.03",
-    "engine": "1.108.224",
+    "version": "2026.08.07",
+    "engine": "1.108.251",
     "repos": {
       "pallets/flask": "6a2f545bfd8ed31e19066a299296917e034aca58"
     },
@@ -115,12 +115,12 @@
         "pallets/flask"
       ],
       "free": false,
-      "version": "2026.08.03",
+      "version": "2026.08.07",
       "filename": "flask.zip",
       "symbols": 2152,
       "size_mb": 0.38,
       "size": "0.38 MB",
-      "indexed_date": "2026.08.03",
+      "indexed_date": "2026.08.07",
       "licenses": [
         {
           "repo": "pallets/flask",
@@ -130,10 +130,10 @@
     }
   },
   "react": {
-    "version": "2026.08.03",
-    "engine": "1.108.224",
+    "version": "2026.08.07",
+    "engine": "1.108.251",
     "repos": {
-      "facebook/react": "3a717e42438afac81020cdec297dadb5613a4304"
+      "facebook/react": "ec61f187fe39b0aa8ec6b508f2553b2047dc30cc"
     },
     "catalog": {
       "id": "react",
@@ -143,12 +143,12 @@
         "facebook/react"
       ],
       "free": false,
-      "version": "2026.08.03",
+      "version": "2026.08.07",
       "filename": "react.zip",
-      "symbols": 43826,
-      "size_mb": 5.8,
-      "size": "5.8 MB",
-      "indexed_date": "2026.08.03",
+      "symbols": 43984,
+      "size_mb": 5.85,
+      "size": "5.85 MB",
+      "indexed_date": "2026.08.07",
       "licenses": [
         {
           "repo": "facebook/react",
@@ -158,10 +158,10 @@
     }
   },
   "langchain": {
-    "version": "2026.08.03",
-    "engine": "1.108.224",
+    "version": "2026.08.07",
+    "engine": "1.108.251",
     "repos": {
-      "langchain-ai/langchain": "dd6081977099b93eb035f81c993434ca90a018ca"
+      "langchain-ai/langchain": "f48fa9478de0dfc51604d5fbe9e6ed4f0143eaac"
     },
     "catalog": {
       "id": "langchain",
@@ -171,12 +171,12 @@
         "langchain-ai/langchain"
       ],
       "free": false,
-      "version": "2026.08.03",
+      "version": "2026.08.07",
       "filename": "langchain.zip",
-      "symbols": 16034,
-      "size_mb": 3.1,
-      "size": "3.1 MB",
-      "indexed_date": "2026.08.03",
+      "symbols": 16054,
+      "size_mb": 3.12,
+      "size": "3.12 MB",
+      "indexed_date": "2026.08.07",
       "licenses": [
         {
           "repo": "langchain-ai/langchain",
@@ -186,10 +186,10 @@
     }
   },
   "laravel": {
-    "version": "2026.08.03",
-    "engine": "1.108.224",
+    "version": "2026.08.07",
+    "engine": "1.108.251",
     "repos": {
-      "laravel/framework": "251dc09c0085e9c661a1910b8f3c9e0d2b3dcff7"
+      "laravel/framework": "deac04fbdcd7443aff45a7bc6767a6729169bba3"
     },
     "catalog": {
       "id": "laravel",
@@ -199,12 +199,12 @@
         "laravel/framework"
       ],
       "free": false,
-      "version": "2026.08.03",
+      "version": "2026.08.07",
       "filename": "laravel.zip",
-      "symbols": 22939,
+      "symbols": 22968,
       "size_mb": 3.95,
       "size": "3.95 MB",
-      "indexed_date": "2026.08.03",
+      "indexed_date": "2026.08.07",
       "licenses": [
         {
           "repo": "laravel/framework",
@@ -214,10 +214,10 @@
     }
   },
   "spring-boot": {
-    "version": "2026.08.03",
-    "engine": "1.108.224",
+    "version": "2026.08.07",
+    "engine": "1.108.251",
     "repos": {
-      "spring-projects/spring-boot": "a603b33de0c58efc783af02dd1d0e0915908f99f"
+      "spring-projects/spring-boot": "c1d83d0e93e64f1b41d20a7ceed0e64e7807bdad"
     },
     "catalog": {
       "id": "spring-boot",
@@ -227,12 +227,12 @@
         "spring-projects/spring-boot"
       ],
       "free": false,
-      "version": "2026.08.03",
+      "version": "2026.08.07",
       "filename": "spring-boot.zip",
       "symbols": 8313,
-      "size_mb": 1.64,
-      "size": "1.64 MB",
-      "indexed_date": "2026.08.03",
+      "size_mb": 1.65,
+      "size": "1.65 MB",
+      "indexed_date": "2026.08.07",
       "licenses": [
         {
           "repo": "spring-projects/spring-boot",
@@ -242,8 +242,8 @@
     }
   },
   "mcp-sdk": {
-    "version": "2026.08.03",
-    "engine": "1.108.224",
+    "version": "2026.08.07",
+    "engine": "1.108.251",
     "repos": {
       "modelcontextprotocol/python-sdk": "a4f4ccd091138771535e17191123f20b30fda68e",
       "modelcontextprotocol/typescript-sdk": "cc4b41617ce3601b1290d67216ea0b194a3cd9ac"
@@ -257,12 +257,12 @@
         "modelcontextprotocol/typescript-sdk"
       ],
       "free": false,
-      "version": "2026.08.03",
+      "version": "2026.08.07",
       "filename": "mcp-sdk.zip",
       "symbols": 40973,
-      "size_mb": 6.1,
-      "size": "6.1 MB",
-      "indexed_date": "2026.08.03",
+      "size_mb": 6.12,
+      "size": "6.12 MB",
+      "indexed_date": "2026.08.07",
       "licenses": [
         {
           "repo": "modelcontextprotocol/python-sdk",
@@ -276,8 +276,8 @@
     }
   },
   "anthropic-sdk": {
-    "version": "2026.08.03",
-    "engine": "1.108.224",
+    "version": "2026.08.07",
+    "engine": "1.108.251",
     "repos": {
       "anthropics/anthropic-sdk-python": "f5c30d0490fb7bcd8e0b65d8d8e63c0e7d1bfe59",
       "anthropics/anthropic-sdk-typescript": "3b45cd3b69c956ac63384fdb09ce1d8109f3fa80"
@@ -291,12 +291,12 @@
         "anthropics/anthropic-sdk-typescript"
       ],
       "free": false,
-      "version": "2026.08.03",
+      "version": "2026.08.07",
       "filename": "anthropic-sdk.zip",
       "symbols": 15357,
       "size_mb": 2.61,
       "size": "2.61 MB",
-      "indexed_date": "2026.08.03",
+      "indexed_date": "2026.08.07",
       "licenses": [
         {
           "repo": "anthropics/anthropic-sdk-python",
