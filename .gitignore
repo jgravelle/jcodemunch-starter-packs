@@ -9,3 +9,10 @@ dist/
 
 __pycache__/
 *.pyc
+
+# `mcp-publisher login` writes LIVE credentials into the working directory: a
+# GitHub token and a registry JWT. Untracked is not enough -- `git add -A` would
+# stage both. The other three suite repos have carried these two lines for
+# months; this repo did not, found by a sweep on 2026-08-15.
+.mcpregistry_github_token
+.mcpregistry_registry_token
