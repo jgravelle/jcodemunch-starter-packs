@@ -46,10 +46,10 @@
     }
   },
   "fastapi": {
-    "version": "2026.10.26",
-    "engine": "1.108.397",
+    "version": "2026.11.02",
+    "engine": "1.108.405",
     "repos": {
-      "fastapi/fastapi": "7a0a3f0b286c6c865cf4398ea0e957a87b8bffa4"
+      "fastapi/fastapi": "45cb2252c737906f37544f5ba6bee0295fb81468"
     },
     "catalog": {
       "id": "fastapi",
@@ -59,12 +59,12 @@
         "fastapi/fastapi"
       ],
       "free": false,
-      "version": "2026.10.26",
+      "version": "2026.11.02",
       "filename": "fastapi.zip",
-      "symbols": 15631,
+      "symbols": 15635,
       "size_mb": 2.24,
       "size": "2.24 MB",
-      "indexed_date": "2026.10.26",
+      "indexed_date": "2026.11.02",
       "licenses": [
         {
           "repo": "fastapi/fastapi",
@@ -102,10 +102,10 @@
     }
   },
   "flask": {
-    "version": "2026.10.26",
-    "engine": "1.108.397",
+    "version": "2026.11.02",
+    "engine": "1.108.405",
     "repos": {
-      "pallets/flask": "d086db856be187255b8ec61ef409357393020f32"
+      "pallets/flask": "49943b5a94413a530761350f04e896f76e8d620e"
     },
     "catalog": {
       "id": "flask",
@@ -115,12 +115,12 @@
         "pallets/flask"
       ],
       "free": false,
-      "version": "2026.10.26",
+      "version": "2026.11.02",
       "filename": "flask.zip",
-      "symbols": 2259,
+      "symbols": 2258,
       "size_mb": 0.39,
       "size": "0.39 MB",
-      "indexed_date": "2026.10.26",
+      "indexed_date": "2026.11.02",
       "licenses": [
         {
           "repo": "pallets/flask",
@@ -130,10 +130,10 @@
     }
   },
   "react": {
-    "version": "2026.10.26",
-    "engine": "1.108.397",
+    "version": "2026.11.02",
+    "engine": "1.108.405",
     "repos": {
-      "facebook/react": "a6b912fbe77f698ad43c922f206db0d4f4ad7485"
+      "facebook/react": "76baa3b5434fad315ece9cfd4d20d7a8d6c34a25"
     },
     "catalog": {
       "id": "react",
@@ -143,12 +143,12 @@
         "facebook/react"
       ],
       "free": false,
-      "version": "2026.10.26",
+      "version": "2026.11.02",
       "filename": "react.zip",
-      "symbols": 30760,
-      "size_mb": 4.36,
-      "size": "4.36 MB",
-      "indexed_date": "2026.10.26",
+      "symbols": 30578,
+      "size_mb": 4.33,
+      "size": "4.33 MB",
+      "indexed_date": "2026.11.02",
       "licenses": [
         {
           "repo": "facebook/react",
@@ -158,10 +158,10 @@
     }
   },
   "langchain": {
-    "version": "2026.10.26",
-    "engine": "1.108.397",
+    "version": "2026.11.02",
+    "engine": "1.108.405",
     "repos": {
-      "langchain-ai/langchain": "d57f1ea32caa10005e816589c9a12c48f4889815"
+      "langchain-ai/langchain": "aa13e9c0e94c4e9d203a15a5960b91e29088a98a"
     },
     "catalog": {
       "id": "langchain",
@@ -171,12 +171,12 @@
         "langchain-ai/langchain"
       ],
       "free": false,
-      "version": "2026.10.26",
+      "version": "2026.11.02",
       "filename": "langchain.zip",
-      "symbols": 18400,
-      "size_mb": 3.47,
-      "size": "3.47 MB",
-      "indexed_date": "2026.10.26",
+      "symbols": 18484,
+      "size_mb": 3.48,
+      "size": "3.48 MB",
+      "indexed_date": "2026.11.02",
       "licenses": [
         {
           "repo": "langchain-ai/langchain",
@@ -186,10 +186,10 @@
     }
   },
   "laravel": {
-    "version": "2026.10.26",
-    "engine": "1.108.397",
+    "version": "2026.11.02",
+    "engine": "1.108.405",
     "repos": {
-      "laravel/framework": "5d7797528723107cd4f495326838a7d7d67fbb20"
+      "laravel/framework": "4bfe20a39407f383ce7c6090c820abd847e9eeb6"
     },
     "catalog": {
       "id": "laravel",
@@ -199,12 +199,12 @@
         "laravel/framework"
       ],
       "free": false,
-      "version": "2026.10.26",
+      "version": "2026.11.02",
       "filename": "laravel.zip",
-      "symbols": 24954,
-      "size_mb": 4.08,
-      "size": "4.08 MB",
-      "indexed_date": "2026.10.26",
+      "symbols": 24585,
+      "size_mb": 4.03,
+      "size": "4.03 MB",
+      "indexed_date": "2026.11.02",
       "licenses": [
         {
           "repo": "laravel/framework",
@@ -214,10 +214,10 @@
     }
   },
   "spring-boot": {
-    "version": "2026.10.26",
-    "engine": "1.108.397",
+    "version": "2026.11.02",
+    "engine": "1.108.405",
     "repos": {
-      "spring-projects/spring-boot": "11778bdc24f72f208f532eba8185311473908019"
+      "spring-projects/spring-boot": "f2abe77da5e6d8619c7edc57596bab2c5ce6cbfc"
     },
     "catalog": {
       "id": "spring-boot",
@@ -227,12 +227,12 @@
         "spring-projects/spring-boot"
       ],
       "free": false,
-      "version": "2026.10.26",
+      "version": "2026.11.02",
       "filename": "spring-boot.zip",
-      "symbols": 8954,
+      "symbols": 8912,
       "size_mb": 1.55,
       "size": "1.55 MB",
-      "indexed_date": "2026.10.26",
+      "indexed_date": "2026.11.02",
       "licenses": [
         {
           "repo": "spring-projects/spring-boot",
@@ -242,11 +242,11 @@
     }
   },
   "mcp-sdk": {
-    "version": "2026.10.26",
-    "engine": "1.108.397",
+    "version": "2026.11.02",
+    "engine": "1.108.405",
     "repos": {
-      "modelcontextprotocol/python-sdk": "a525a3d9bece967d91534b746a6c842931b7b4ec",
-      "modelcontextprotocol/typescript-sdk": "951fe5603a7ec0b2dcb6a0b95d92cd86f93ad9e5"
+      "modelcontextprotocol/python-sdk": "d7845c073a2b9ba5ab2817ecf93d3e45ef24cd14",
+      "modelcontextprotocol/typescript-sdk": "1e608caeb5130b2ad0fa067c84b26a038c1c6e36"
     },
     "catalog": {
       "id": "mcp-sdk",
@@ -257,12 +257,12 @@
         "modelcontextprotocol/typescript-sdk"
       ],
       "free": false,
-      "version": "2026.10.26",
+      "version": "2026.11.02",
       "filename": "mcp-sdk.zip",
-      "symbols": 35011,
-      "size_mb": 5.64,
-      "size": "5.64 MB",
-      "indexed_date": "2026.10.26",
+      "symbols": 35886,
+      "size_mb": 5.74,
+      "size": "5.74 MB",
+      "indexed_date": "2026.11.02",
       "licenses": [
         {
           "repo": "modelcontextprotocol/python-sdk",
