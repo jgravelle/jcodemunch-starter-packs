@@ -444,7 +444,7 @@ def test_only_node_raises_the_file_limit():
     # other repo fits under the CLI's own 30,000.
     doc = json.loads((ROOT / "packs.json").read_text(encoding="utf-8"))
     limits = {r: n for p in doc["packs"] for r, n in (p.get("max_files") or {}).items()}
-    assert limits == {"nodejs/node": 40000}
+    assert limits == {"nodejs/node": 50000}
     for p in doc["packs"]:
         assert set(p.get("max_files") or {}) <= set(p["repos"]), p["id"]
 

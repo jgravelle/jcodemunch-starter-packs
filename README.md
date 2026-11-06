@@ -85,7 +85,7 @@ The CLI's own file limit is 30,000 (jcodemunch-mcp 1.108.419 and later; it was
 the 2,000-file in-call limit before, which cut seven of ten packs). A repo larger
 than that gets its own limit in `packs.json` (`"max_files": {"owner/name": N}`
 on its pack), passed to that one `jcodemunch-mcp index` call as
-`JCODEMUNCH_MAX_FOLDER_FILES`. Only `nodejs/node` has one (40,000).
+`JCODEMUNCH_MAX_FOLDER_FILES`. Only `nodejs/node` has one (50,000).
 
 ## Change detection + versioning
 
