@@ -332,7 +332,7 @@ def test_a_complete_index_is_publishable(tmp_path):
     _mk_covered(db)
     cov = bp.pack_coverage(db)
     assert cov["files_indexed"] == 3 and cov["files_found"] == 3
-    assert cov["cap_hit"] is False and cov["complete"] is True
+    assert cov["cap_hit"] is False and cov["publishable"] is True
     assert bp.coverage_refusal(cov) == []
 
 
@@ -346,15 +346,31 @@ def test_an_index_cut_by_the_file_cap_is_refused(tmp_path):
     assert reasons and "2000 of 2591" in reasons[0]
 
 
-@pytest.mark.parametrize("missing", ["cap", "coverage"])
-def test_an_index_that_cannot_account_for_itself_is_refused(tmp_path, missing):
-    # Unknown is not complete: an engine that wrote neither record could have
+@pytest.mark.parametrize("key,stored", [
+    ("cap", None), ("coverage", None),      # the key is absent
+    ("cap", {}), ("coverage", {}),          # jcodemunch-mcp's own spelling of unknown: "{}"
+    ("cap", {"truncated": "no"}),           # present, but not the boolean the check reads
+    ("coverage", {"skip_counts": None}),
+])
+def test_an_index_that_cannot_account_for_itself_is_refused(tmp_path, key, stored):
+    # Unknown is not complete: an engine that wrote no usable record could have
     # cut the repo without saying so.
     db = tmp_path / "x-y.db"
-    _mk_covered(db, **{missing: None})
+    _mk_covered(db, **{key: stored})
     cov = bp.pack_coverage(db)
-    assert cov["complete"] is False
+    assert cov["publishable"] is False
     assert bp.coverage_refusal(cov)
+
+
+def test_an_unreadable_index_refuses_instead_of_raising(tmp_path):
+    db = tmp_path / "x-y.db"
+    conn = sqlite3.connect(str(db))
+    conn.execute("CREATE TABLE other (x)")
+    conn.commit()
+    conn.close()
+    cov = bp.pack_coverage(db)
+    assert cov["publishable"] is False and "unreadable" in cov["error"]
+    assert bp.coverage_refusal(cov) == [cov["error"]]
 
 
 def test_size_limit_skips_are_reported_and_do_not_refuse(tmp_path):
@@ -368,12 +384,53 @@ def test_size_limit_skips_are_reported_and_do_not_refuse(tmp_path):
 
 
 def test_reading_coverage_writes_nothing(tmp_path):
+    # In WAL mode, as jcodemunch-mcp stores its indexes. An ordinary connection
+    # creates -wal and -shm just by reading; an immutable one creates neither.
     db = tmp_path / "x-y.db"
     _mk_covered(db)
+    conn = sqlite3.connect(str(db))
+    assert conn.execute("PRAGMA journal_mode=wal").fetchone()[0] == "wal"
+    conn.close()
+    assert not Path(f"{db}-wal").exists() and not Path(f"{db}-shm").exists()
     before = db.stat().st_mtime_ns
-    bp.pack_coverage(db)
+    opened = []
+    real_connect = sqlite3.connect
+
+    def spy(target, *args, **kw):
+        opened.append((str(target), kw.get("uri")))
+        return real_connect(target, *args, **kw)
+
+    import unittest.mock
+    with unittest.mock.patch.object(bp.sqlite3, "connect", spy):
+        assert bp.pack_coverage(db)["publishable"] is True
+    # SQLite deletes -wal/-shm when the last connection closes, so their absence
+    # afterwards proves nothing on its own; the open mode is the property.
+    assert opened and all(uri and "mode=ro" in target for target, uri in opened), opened
     assert db.stat().st_mtime_ns == before
-    assert not (tmp_path / "x-y.db-wal").exists()
+    assert not Path(f"{db}-wal").exists() and not Path(f"{db}-shm").exists()
+
+
+def test_an_index_with_an_open_wal_is_read_through_it(tmp_path):
+    # Immutable cannot see a WAL's contents and reports the tables missing; a
+    # write still in the WAL must be read, not mistaken for an unreadable index.
+    db = tmp_path / "x-y.db"
+    writer = sqlite3.connect(str(db))
+    writer.execute("PRAGMA journal_mode=wal")
+    writer.execute("PRAGMA wal_autocheckpoint=0")
+    writer.execute("CREATE TABLE meta (key TEXT PRIMARY KEY, value TEXT)")
+    writer.execute("CREATE TABLE files (path TEXT)")
+    writer.executemany("INSERT INTO meta VALUES (?, ?)", [
+        ("file_cap_status", json.dumps({"truncated": False})),
+        ("coverage", json.dumps({"skip_counts": {}})),
+    ])
+    writer.execute("INSERT INTO files VALUES ('a')")
+    writer.commit()
+    try:
+        assert Path(f"{db}-wal").stat().st_size > 0
+        cov = bp.pack_coverage(db)
+        assert "error" not in cov and cov["publishable"] is True and cov["files_indexed"] == 1
+    finally:
+        writer.close()
 
 
 # ── the file limit for one large repo ────────────────────────────────────
@@ -452,7 +509,7 @@ def test_build_ships_the_whole_pack_and_refuses_the_cut_one(builder):
     with zipfile.ZipFile(builder / "dist" / "whole.zip") as z:
         manifest = json.loads(z.read("whole/manifest.json"))
     cov = manifest["coverage"]["a/one"]
-    assert cov["complete"] is True and cov["cap_hit"] is False
+    assert cov["publishable"] is True and cov["cap_hit"] is False
     assert cov["files_indexed"] == 3 and cov["size_limit_skipped"] == 1
     assert manifest["total_files"] == 3
     catalog = json.loads((builder / "dist" / "catalog.json").read_text(encoding="utf-8"))
@@ -464,3 +521,29 @@ def test_a_build_where_every_pack_is_cut_fails(builder, monkeypatch):
     _mk.unlink()
     _mk_covered(_mk, cap={"truncated": True, "files_discovered": 9, "files_indexed": 3})
     assert bp.build(no_index=True, force=True) == 1
+
+
+def test_build_hands_the_packs_json_limit_to_the_index_call(builder, monkeypatch):
+    # End to end: packs.json's max_files must reach _run_index, not only the
+    # helper. Dropping it in build() left Node's 40,000 with no guard.
+    defs = json.loads(bp.PACKS_DEF.read_text(encoding="utf-8"))
+    defs["packs"][0]["max_files"] = {"a/one": 40000}
+    bp.PACKS_DEF.write_text(json.dumps(defs), encoding="utf-8")
+    seen = {}
+    monkeypatch.setattr(bp, "_upstream_head", lambda r: "f" * 40)
+    monkeypatch.setattr(bp, "_run_index", lambda r, max_files=None: seen.__setitem__(r, max_files))
+    bp.build(no_index=False, force=True)
+    assert seen == {"a/one": 40000, "b/two": None}
+
+
+def test_an_unreadable_index_refuses_its_pack_and_the_build_goes_on(builder):
+    bad = builder / "idx" / "b-two.db"
+    bad.unlink()
+    conn = sqlite3.connect(str(bad))
+    conn.execute("CREATE TABLE other (x)")
+    conn.commit()
+    conn.close()
+    assert bp.build(no_index=True, force=True) == 0
+    assert (builder / "dist" / "whole.zip").exists()
+    assert not (builder / "dist" / "cut.zip").exists()
+    assert (builder / "dist" / "catalog.json").exists()

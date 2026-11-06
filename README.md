@@ -66,8 +66,10 @@ A pack is a repo's whole index or it doesn't ship. Before packaging, the builder
 reads each index's own records (read-only):
 
 - `file_cap_status` says whether the file-count limit cut the walk. A cut index
-  refuses the pack, and so does an index with no `file_cap_status`, because an
-  index that can't say whether it was cut isn't proven whole.
+  refuses the pack, and so does an index with no usable `file_cap_status`
+  (absent, or jcodemunch-mcp's `{}` for unknown), because an index that can't
+  say whether it was cut isn't proven whole. An index that can't be read refuses
+  its pack the same way; the other packs still build.
 - The `coverage` block counts files over the per-file size limit (512,000 bytes
   by default). Those are reported, as a build warning and in the manifest, and
   don't refuse a pack. An index with no `coverage` block refuses, because the
@@ -75,8 +77,9 @@ reads each index's own records (read-only):
 
 A refused pack is handled like any other failed build: the previously built pack
 keeps shipping. `manifest.json` records per repo `files_indexed`, `files_found`,
-`cap_hit`, `files_cut_by_cap`, `size_limit_skipped`, `commit` and `complete`,
-plus `total_files`.
+`cap_hit`, `files_cut_by_cap`, `size_limit_skipped`, `commit` and `publishable`,
+plus `total_files`. `publishable` is not the engine's own `coverage.complete`,
+which is false whenever a file was over the size limit.
 
 The CLI's own file limit is 30,000 (jcodemunch-mcp 1.108.419 and later; it was
 the 2,000-file in-call limit before, which cut seven of ten packs). A repo larger

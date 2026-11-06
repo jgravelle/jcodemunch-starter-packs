@@ -194,43 +194,65 @@ def index_env(max_files: int | None) -> dict:
 def pack_coverage(db: Path) -> dict:
     """What an index holds against what its walk found, read from its own meta.
 
-    Opened read-only and immutable, so it writes nothing and creates no WAL.
-    `file_cap_status` says whether the file-count limit cut the walk; the
-    `coverage` block counts files skipped for being over the per-file size
-    limit. An index with neither record cannot account for itself, so its
-    completeness is unknown, never assumed.
+    Read-only: immutable when no `-wal` sits beside the file (so no sidecar is
+    created), plain `mode=ro` when one does (immutable cannot read a WAL, and
+    would report the tables missing). `file_cap_status` says whether the
+    file-count limit cut the walk; the `coverage` block counts files skipped for
+    being over the per-file size limit.
+
+    ⚠ Unknown is never complete. jcodemunch-mcp stores an unknown status as
+    `"{}"`, not as a missing key, so a record counts only when it carries the
+    field it is read for: a boolean `truncated`, a `skip_counts` object. An
+    index that cannot be read at all returns `error` and refuses too.
     """
-    conn = sqlite3.connect(f"file:{db}?mode=ro&immutable=1", uri=True)
+    out = {"commit": "", "files_indexed": None, "files_found": None, "cap_hit": None,
+           "files_cut_by_cap": None, "size_limit_skipped": None, "publishable": False}
+    wal = Path(f"{db}-wal")
+    mode = "ro" if wal.exists() and wal.stat().st_size else "ro&immutable=1"
     try:
-        meta = dict(conn.execute("SELECT key, value FROM meta").fetchall())
-        files = conn.execute("SELECT COUNT(*) FROM files").fetchone()[0]
-    finally:
-        conn.close()
+        conn = sqlite3.connect(f"file:{db}?mode={mode}", uri=True)
+        try:
+            meta = dict(conn.execute("SELECT key, value FROM meta").fetchall())
+            files = conn.execute("SELECT COUNT(*) FROM files").fetchone()[0]
+        finally:
+            conn.close()
+    except sqlite3.Error as e:
+        out["error"] = f"index unreadable: {e}"
+        return out
 
     def _json(key):
         try:
-            return json.loads(meta[key]) if meta.get(key) else None
+            value = json.loads(meta[key]) if meta.get(key) else None
         except ValueError:
             return None
+        return value if isinstance(value, dict) else None
 
     cap = _json("file_cap_status")
+    if cap is not None and not isinstance(cap.get("truncated"), bool):
+        cap = None
     cov = _json("coverage")
-    cap_hit = None if cap is None else bool(cap.get("truncated"))
+    if cov is not None and not isinstance(cov.get("skip_counts"), dict):
+        cov = None
+    cap_hit = None if cap is None else cap["truncated"]
+    indexed = files
+    if cap_hit and isinstance(cap.get("files_indexed"), int):
+        indexed = cap["files_indexed"]  # the count the walk's `files_discovered` matches
     found = (cap or {}).get("files_discovered")
     if found is None and cap_hit is False:
         found = files
-    size_skipped = None
-    if cov is not None:
-        size_skipped = (cov.get("skip_counts") or {}).get("too_large", 0)
-    return {
+    out.update({
         "commit": meta.get("git_head") or "",
-        "files_indexed": files,
+        "files_indexed": indexed,
         "files_found": found,
         "cap_hit": cap_hit,
-        "files_cut_by_cap": (cap or {}).get("files_skipped_cap") if cap_hit else 0,
-        "size_limit_skipped": size_skipped,
-        "complete": cap_hit is False and cov is not None,
-    }
+        "files_cut_by_cap": (cap.get("files_skipped_cap") if cap_hit else 0) if cap else None,
+        "size_limit_skipped": None if cov is None else cov["skip_counts"].get("too_large", 0),
+    })
+    # Not the engine's own `coverage.complete`, which is false whenever a file
+    # was over the size limit. Size skips do not stop a pack (J, 2026-11-06),
+    # so this says only that no file limit cut the index and both records exist.
+    out["publishable"] = cap_hit is False and cov is not None
+    return out
 
 
 def coverage_refusal(cov: dict) -> list[str]:
@@ -240,15 +262,16 @@ def coverage_refusal(cov: dict) -> list[str]:
     Files over the per-file size limit do not refuse: they are reported in the
     manifest (J, 2026-11-06).
     """
+    if cov.get("error"):
+        return [cov["error"]]
     reasons = []
     if cov["cap_hit"] is None:
-        reasons.append("no file_cap_status in the index: whether the file limit cut it is unknown")
+        reasons.append("no usable file_cap_status in the index: whether the file limit cut it is unknown")
     elif cov["cap_hit"]:
-        reasons.append(
-            f"the file limit cut the index: {cov['files_indexed']} of {cov['files_found']} files"
-        )
+        found = cov["files_found"] if cov["files_found"] is not None else "an unknown number of"
+        reasons.append(f"the file limit cut the index: {cov['files_indexed']} of {found} files")
     if cov["size_limit_skipped"] is None:
-        reasons.append("no coverage block in the index: size-limit skips are unknown")
+        reasons.append("no usable coverage block in the index: size-limit skips are unknown")
     return reasons
 
 
