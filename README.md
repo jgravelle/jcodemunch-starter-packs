@@ -16,7 +16,7 @@ prefix that jcm's `install-pack` strips on extract.
 |------|------|
 | `packs.json` | Source of truth: pack id / name / description / free / repos, plus `repo_licenses`. Symbols, size, and version are computed at build time. |
 | `build_pack.py` | The builder. Indexes changed repos, packages `.db` files and each repo's attribution, writes `dist/<pack-id>.zip` + `dist/catalog.json`, updates `state.json`. |
-| `test_build_pack.py` | Tests for the attribution gate. CI runs them before anything is cloned. |
+| `test_build_pack.py` | Tests for the attribution and coverage gates. CI runs them before anything is cloned. |
 | `state.json` | Change-detection state (per-pack last-built upstream shas, jcm engine version, version) **and `repo_license_digests`**, the record of which attribution each pack was built against. Committed back by CI. |
 | `.github/workflows/refresh-packs.yml` | Weekly + on-demand workflow: test, build, SFTP-deploy, verify the live catalog, commit state. |
 | `dist/` | Build output (gitignored). Uploaded to Hostinger. |
@@ -59,6 +59,30 @@ Two repos are worth knowing about, both flagged in `packs.json`:
 Attribution files are matched at the **clone root only**. `django/django` carries
 hundreds of `LICENSE` files in test fixtures and vendored trees, and sweeping
 those in would bury the one that governs the code we ship.
+
+## Coverage
+
+A pack is a repo's whole index or it doesn't ship. Before packaging, the builder
+reads each index's own records (read-only):
+
+- `file_cap_status` says whether the file-count limit cut the walk. A cut index
+  refuses the pack, and so does an index with no `file_cap_status`, because an
+  index that can't say whether it was cut isn't proven whole.
+- The `coverage` block counts files over the per-file size limit (512,000 bytes
+  by default). Those are reported, as a build warning and in the manifest, and
+  don't refuse a pack. An index with no `coverage` block refuses, because the
+  count is unknown.
+
+A refused pack is handled like any other failed build: the previously built pack
+keeps shipping. `manifest.json` records per repo `files_indexed`, `files_found`,
+`cap_hit`, `files_cut_by_cap`, `size_limit_skipped`, `commit` and `complete`,
+plus `total_files`.
+
+The CLI's own file limit is 30,000 (jcodemunch-mcp 1.108.419 and later; it was
+the 2,000-file in-call limit before, which cut seven of ten packs). A repo larger
+than that gets its own limit in `packs.json` (`"max_files": {"owner/name": N}`
+on its pack), passed to that one `jcodemunch-mcp index` call as
+`JCODEMUNCH_MAX_FOLDER_FILES`. Only `nodejs/node` has one (40,000).
 
 ## Change detection + versioning
 
