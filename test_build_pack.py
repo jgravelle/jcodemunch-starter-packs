@@ -351,6 +351,7 @@ def test_an_index_cut_by_the_file_cap_is_refused(tmp_path):
     ("cap", {}), ("coverage", {}),          # jcodemunch-mcp's own spelling of unknown: "{}"
     ("cap", {"truncated": "no"}),           # present, but not the boolean the check reads
     ("coverage", {"skip_counts": None}),
+    ("cap", True), ("coverage", []),        # valid JSON that is not an object
 ])
 def test_an_index_that_cannot_account_for_itself_is_refused(tmp_path, key, stored):
     # Unknown is not complete: an engine that wrote no usable record could have
@@ -410,9 +411,10 @@ def test_reading_coverage_writes_nothing(tmp_path):
     assert not Path(f"{db}-wal").exists() and not Path(f"{db}-shm").exists()
 
 
-def test_an_index_with_an_open_wal_is_read_through_it(tmp_path):
-    # Immutable cannot see a WAL's contents and reports the tables missing; a
-    # write still in the WAL must be read, not mistaken for an unreadable index.
+def test_an_index_with_an_open_wal_refuses_but_is_still_read(tmp_path):
+    # Immutable cannot see a WAL's contents and reports the tables missing, so
+    # the index is read through it. But the pack copies the .db alone, so the
+    # pack refuses until the WAL is merged.
     db = tmp_path / "x-y.db"
     writer = sqlite3.connect(str(db))
     writer.execute("PRAGMA journal_mode=wal")
@@ -428,7 +430,9 @@ def test_an_index_with_an_open_wal_is_read_through_it(tmp_path):
     try:
         assert Path(f"{db}-wal").stat().st_size > 0
         cov = bp.pack_coverage(db)
-        assert "error" not in cov and cov["publishable"] is True and cov["files_indexed"] == 1
+        assert cov["files_indexed"] == 1 and cov["cap_hit"] is False  # read, not "no such table"
+        assert cov["publishable"] is False and "-wal" in cov["error"]
+        assert bp.coverage_refusal(cov) == [cov["error"]]
     finally:
         writer.close()
 

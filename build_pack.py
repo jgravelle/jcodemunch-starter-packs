@@ -248,10 +248,14 @@ def pack_coverage(db: Path) -> dict:
         "files_cut_by_cap": (cap.get("files_skipped_cap") if cap_hit else 0) if cap else None,
         "size_limit_skipped": None if cov is None else cov["skip_counts"].get("too_large", 0),
     })
+    if mode == "ro":
+        # The archive copies the .db alone, so writes still in the WAL would pass
+        # this check and miss the pack. Not checkpointed is not known complete.
+        out["error"] = "index has an unmerged -wal file: its last writes are not in the .db the pack copies"
     # Not the engine's own `coverage.complete`, which is false whenever a file
     # was over the size limit. Size skips do not stop a pack (J, 2026-11-06),
     # so this says only that no file limit cut the index and both records exist.
-    out["publishable"] = cap_hit is False and cov is not None
+    out["publishable"] = cap_hit is False and cov is not None and "error" not in out
     return out
 
 
