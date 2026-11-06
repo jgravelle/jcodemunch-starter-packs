@@ -39,8 +39,8 @@
       "description": "Pre-indexed: Node.js core, Express 4.x, Fastify, and Koa.",
       "free": true,
       "repos": ["nodejs/node", "expressjs/express", "fastify/fastify", "koajs/koa"],
-      "_max_files_comment": "nodejs/node has 36,060 indexable files (2026-11-06), over the CLI's own 30,000-file limit. Without this the free pack ships a cut index and the coverage check refuses it. J, 2026-11-06: Node only.",
-      "max_files": { "nodejs/node": 40000 }
+      "_max_files_comment": "nodejs/node has more than 40,000 indexable files (2026-11-06), over the CLI's own 30,000-file limit. Without this the free pack ships a cut index and the coverage check refuses it. Node only; 50,000 leaves room to grow.",
+      "max_files": { "nodejs/node": 50000 }
     },
     {
       "id": "fastapi",
