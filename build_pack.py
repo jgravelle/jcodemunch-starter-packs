@@ -253,7 +253,7 @@ def pack_coverage(db: Path) -> dict:
         # this check and miss the pack. Not checkpointed is not known complete.
         out["error"] = "index has an unmerged -wal file: its last writes are not in the .db the pack copies"
     # Not the engine's own `coverage.complete`, which is false whenever a file
-    # was over the size limit. Size skips do not stop a pack (J, 2026-11-06),
+    # was over the size limit. Size skips do not stop a pack,
     # so this says only that no file limit cut the index and both records exist.
     out["publishable"] = cap_hit is False and cov is not None and "error" not in out
     return out
@@ -264,7 +264,7 @@ def coverage_refusal(cov: dict) -> list[str]:
 
     A cut index and an index that cannot say whether it was cut both refuse.
     Files over the per-file size limit do not refuse: they are reported in the
-    manifest (J, 2026-11-06).
+    manifest.
     """
     if cov.get("error"):
         return [cov["error"]]
