@@ -176,7 +176,110 @@ def _cached_attribution(repo: str) -> list[tuple[str, bytes]]:
     return [(p.name, p.read_bytes()) for p in sorted(src.iterdir()) if p.is_file()]
 
 
-def _run_index(repo: str) -> None:
+def index_env(max_files: int | None) -> dict:
+    """The environment for one repo's `jcodemunch-mcp index` call.
+
+    A repo larger than the CLI's own file limit (30,000 from jcodemunch-mcp
+    1.108.419) gets its own limit through `JCODEMUNCH_MAX_FOLDER_FILES`. With
+    `cli_max_folder_files` left at its default, the CLI uses a `max_folder_files`
+    that was set, so this raises the limit for that one command and nothing else.
+    `cli_max_folder_files` has no environment variable.
+    """
+    env = dict(os.environ)
+    if max_files:
+        env["JCODEMUNCH_MAX_FOLDER_FILES"] = str(int(max_files))
+    return env
+
+
+def pack_coverage(db: Path) -> dict:
+    """What an index holds against what its walk found, read from its own meta.
+
+    Read-only: immutable when no `-wal` sits beside the file (so no sidecar is
+    created), plain `mode=ro` when one does (immutable cannot read a WAL, and
+    would report the tables missing). `file_cap_status` says whether the
+    file-count limit cut the walk; the `coverage` block counts files skipped for
+    being over the per-file size limit.
+
+    ⚠ Unknown is never complete. jcodemunch-mcp stores an unknown status as
+    `"{}"`, not as a missing key, so a record counts only when it carries the
+    field it is read for: a boolean `truncated`, a `skip_counts` object. An
+    index that cannot be read at all returns `error` and refuses too.
+    """
+    out = {"commit": "", "files_indexed": None, "files_found": None, "cap_hit": None,
+           "files_cut_by_cap": None, "size_limit_skipped": None, "publishable": False}
+    wal = Path(f"{db}-wal")
+    mode = "ro" if wal.exists() and wal.stat().st_size else "ro&immutable=1"
+    try:
+        conn = sqlite3.connect(f"file:{db}?mode={mode}", uri=True)
+        try:
+            meta = dict(conn.execute("SELECT key, value FROM meta").fetchall())
+            files = conn.execute("SELECT COUNT(*) FROM files").fetchone()[0]
+        finally:
+            conn.close()
+    except sqlite3.Error as e:
+        out["error"] = f"index unreadable: {e}"
+        return out
+
+    def _json(key):
+        try:
+            value = json.loads(meta[key]) if meta.get(key) else None
+        except ValueError:
+            return None
+        return value if isinstance(value, dict) else None
+
+    cap = _json("file_cap_status")
+    if cap is not None and not isinstance(cap.get("truncated"), bool):
+        cap = None
+    cov = _json("coverage")
+    if cov is not None and not isinstance(cov.get("skip_counts"), dict):
+        cov = None
+    cap_hit = None if cap is None else cap["truncated"]
+    indexed = files
+    if cap_hit and isinstance(cap.get("files_indexed"), int):
+        indexed = cap["files_indexed"]  # the count the walk's `files_discovered` matches
+    found = (cap or {}).get("files_discovered")
+    if found is None and cap_hit is False:
+        found = files
+    out.update({
+        "commit": meta.get("git_head") or "",
+        "files_indexed": indexed,
+        "files_found": found,
+        "cap_hit": cap_hit,
+        "files_cut_by_cap": (cap.get("files_skipped_cap") if cap_hit else 0) if cap else None,
+        "size_limit_skipped": None if cov is None else cov["skip_counts"].get("too_large", 0),
+    })
+    if mode == "ro":
+        # The archive copies the .db alone, so writes still in the WAL would pass
+        # this check and miss the pack. Not checkpointed is not known complete.
+        out["error"] = "index has an unmerged -wal file: its last writes are not in the .db the pack copies"
+    # Not the engine's own `coverage.complete`, which is false whenever a file
+    # was over the size limit. Size skips do not stop a pack (J, 2026-11-06),
+    # so this says only that no file limit cut the index and both records exist.
+    out["publishable"] = cap_hit is False and cov is not None and "error" not in out
+    return out
+
+
+def coverage_refusal(cov: dict) -> list[str]:
+    """Why a pack built from this index must not ship; empty means it may.
+
+    A cut index and an index that cannot say whether it was cut both refuse.
+    Files over the per-file size limit do not refuse: they are reported in the
+    manifest (J, 2026-11-06).
+    """
+    if cov.get("error"):
+        return [cov["error"]]
+    reasons = []
+    if cov["cap_hit"] is None:
+        reasons.append("no usable file_cap_status in the index: whether the file limit cut it is unknown")
+    elif cov["cap_hit"]:
+        found = cov["files_found"] if cov["files_found"] is not None else "an unknown number of"
+        reasons.append(f"the file limit cut the index: {cov['files_indexed']} of {found} files")
+    if cov["size_limit_skipped"] is None:
+        reasons.append("no usable coverage block in the index: size-limit skips are unknown")
+    return reasons
+
+
+def _run_index(repo: str, max_files: int | None = None) -> None:
     """Index a repo from a shallow clone rather than through the GitHub API.
 
     The API path costs roughly one request per tree and blob. On a runner the
@@ -209,7 +312,7 @@ def _run_index(repo: str) -> None:
         # the licence evidence behind for the next run to compare against.
         _cache_attribution(repo, collect_attribution_files(clone))
         print(f"  indexing {repo} ...", flush=True)
-        subprocess.run([MCP_BIN, "index", str(clone)], check=True)
+        subprocess.run([MCP_BIN, "index", str(clone)], check=True, env=index_env(max_files))
     finally:
         # Discard immediately so peak disk is one repo, not ten. Deleting is
         # safe: the next run recreates the identical path, which is what keeps
@@ -336,7 +439,7 @@ def build(no_index: bool, force: bool) -> int:
             if not no_index:
                 try:
                     for r in repos:
-                        _run_index(r)
+                        _run_index(r, max_files=(pack.get("max_files") or {}).get(r))
                 except subprocess.CalledProcessError as e:
                     print(f"::warning::index failed for {pid}: {e} -- keeping prior pack")
                     failed.append(pid)
@@ -367,6 +470,23 @@ def build(no_index: bool, force: bool) -> int:
                 attribution[r] = (files, digest)
             if blocked:
                 print(f"::error::{pid}: {blocked}")
+                failed.append(pid)
+                if prev_cat:
+                    catalog.append(prev_cat)
+                continue
+
+            # Coverage gate. A pack is the whole repo or it does not ship: the
+            # 2,000-file cut went out for weeks because the index recorded it
+            # and nothing here read it.
+            coverage, cut = {}, []
+            for r, p in dbs.items():
+                coverage[r] = pack_coverage(p)
+                cut += [f"{r}: {why}" for why in coverage_refusal(coverage[r])]
+                if coverage[r]["size_limit_skipped"]:
+                    print(f"::warning::{pid}: {r} has {coverage[r]['size_limit_skipped']} "
+                          f"file(s) over the per-file size limit (reported in the manifest)")
+            if cut:
+                print(f"::error::{pid}: not packaged: " + "; ".join(cut))
                 failed.append(pid)
                 if prev_cat:
                     catalog.append(prev_cat)
@@ -414,6 +534,10 @@ def build(no_index: bool, force: bool) -> int:
                     "created": datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
                     "repos": repos,
                     "total_symbols": symbols,
+                    "total_files": sum(c["files_indexed"] for c in coverage.values()),
+                    # Per repo: files indexed against files the walk found,
+                    # whether a limit cut it, and files over the size limit.
+                    "coverage": coverage,
                     "format": "jcodemunch-sqlite",
                     "engine": engine,
                     "install_target": "~/.code-index/",
