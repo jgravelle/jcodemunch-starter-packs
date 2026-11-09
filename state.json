@@ -310,19 +310,19 @@
     }
   },
   "repo_license_digests": {
-    "nodejs/node": "7cebc77e3153b94df0d0f8c3896442b611b8fd78f8c7d20dbc9c067b015a29e1",
+    "nodejs/node": "406f5732e3adf1af07f2208d57bbfce9f61fd23267cefe25579043d208b538ce",
     "expressjs/express": "6040fa061e46189e847c08882ce73f02d13484237d2c1ddc59659ebd6b52b7c8",
     "fastify/fastify": "80cb6e1f8d39a0fe56a61ca44b254c9514e442adf0a8a744660a8c051b359ed4",
     "koajs/koa": "884c573fd0e5d6612ef456de383a0d84a7cb66f9c87e45a3c43f36bf955b5b94",
     "fastapi/fastapi": "33d13508a8fbee733d7b731a421a458db2e12ec4a17924f0d96c5708ab4e79e1",
-    "django/django": "fecf29b8cc91d720f2021f8dffbd689399295e3788cf3c8ceb0064500ab5d0a3",
+    "django/django": "4db628ccef8821b0badc83a5e3600f6bec4132594d0eb7fdedddd19a0a83065f",
     "pallets/flask": "26cb858bcb777bd49fb74df50fad1964c65ae1ac6bb8793707aa03d3ee696104",
     "facebook/react": "b9a239614565cba5f2221d2f2a2b50536fd69b7566f131a5f6b42a0eac43a7a2",
     "langchain-ai/langchain": "40cd4561306153934f040300e76b71798a3bdf8a3770b70ea432bc5d3ac23d61",
     "laravel/framework": "8034e4b2dcfa7c53aeee1a0248b46083934fab705302d586eb5bafbaf833a3a4",
     "spring-projects/spring-boot": "138719dec07fea152ea6295e994250da53a23a2e6789e1f18c8b3722d3a06bcf",
-    "anthropics/anthropic-sdk-python": "23dba67b4f73cad57a42d18be73d2068939a0b05374833296869e313c6640f55",
-    "anthropics/anthropic-sdk-typescript": "23dba67b4f73cad57a42d18be73d2068939a0b05374833296869e313c6640f55",
+    "anthropics/anthropic-sdk-python": "78653c22bee752ecfce0320da4293d2b6e15f2f6ef51488edf099fee7f6d8628",
+    "anthropics/anthropic-sdk-typescript": "b0e8d4a5ed53fd46966795f9edf8afcce0b2af463ec389d2d80f762a78b76e37",
     "modelcontextprotocol/python-sdk": "acb792072965f0de25048dc47f303db4a5d2f3fe0019c2b68c51ec877a55bd38",
     "modelcontextprotocol/typescript-sdk": "8a1bdf27613b40ba6809ab2ced914c129d43cfda02d0391317b87da3f234a558"
   }
