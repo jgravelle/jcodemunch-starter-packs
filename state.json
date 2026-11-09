@@ -1,12 +1,12 @@
 {
   "nodejs": {
-    "version": "2026.08.17",
-    "engine": "1.108.282",
+    "version": "2026.11.09",
+    "engine": "1.108.428",
     "repos": {
-      "nodejs/node": "977c20ed675e9c240e841ccf9edd06c5a4b239a4",
-      "expressjs/express": "a3714473feb3d2908add734d340e7755fd85e0a3",
-      "fastify/fastify": "6e95cb9f6de47deaf145138661c70a1eec34ec97",
-      "koajs/koa": "e145325bec7399e3359414badae4a248e7ae1c3b"
+      "nodejs/node": "9aa379e22fafbd2521430ab2013c63f4d706d757",
+      "expressjs/express": "43fca52d28a422c8be48fd489cbd4f2d6152bab6",
+      "fastify/fastify": "0b076ca595d19951c536daf515c778b38cf6ba69",
+      "koajs/koa": "b7ead6f7a2bb56e2948b1c5e1cca77483e89c885"
     },
     "catalog": {
       "id": "nodejs",
@@ -19,12 +19,12 @@
         "koajs/koa"
       ],
       "free": true,
-      "version": "2026.08.17",
+      "version": "2026.11.09",
       "filename": "nodejs.zip",
-      "symbols": 51849,
-      "size_mb": 8.02,
-      "size": "8.02 MB",
-      "indexed_date": "2026.08.17",
+      "symbols": 1031439,
+      "size_mb": 177.07,
+      "size": "177.07 MB",
+      "indexed_date": "2026.11.09",
       "licenses": [
         {
           "repo": "nodejs/node",
@@ -74,10 +74,10 @@
     }
   },
   "django": {
-    "version": "2026.08.10",
-    "engine": "1.108.270",
+    "version": "2026.11.09",
+    "engine": "1.108.428",
     "repos": {
-      "django/django": "c9eb16a87e60c305fb3651459639f647cce498db"
+      "django/django": "6a8248f13fe7b51c4414eeaf3554a666464b2636"
     },
     "catalog": {
       "id": "django",
@@ -87,12 +87,12 @@
         "django/django"
       ],
       "free": false,
-      "version": "2026.08.10",
+      "version": "2026.11.09",
       "filename": "django.zip",
-      "symbols": 38412,
-      "size_mb": 6.57,
-      "size": "6.57 MB",
-      "indexed_date": "2026.08.10",
+      "symbols": 60641,
+      "size_mb": 11.28,
+      "size": "11.28 MB",
+      "indexed_date": "2026.11.09",
       "licenses": [
         {
           "repo": "django/django",
@@ -217,7 +217,7 @@
     "version": "2026.11.09",
     "engine": "1.108.428",
     "repos": {
-      "spring-projects/spring-boot": "bafb11263aca6686585eb654f9129dc3ee4e6482"
+      "spring-projects/spring-boot": "52dba7773c16cc5d145e59ad69de1b99e87896bb"
     },
     "catalog": {
       "id": "spring-boot",
@@ -230,8 +230,8 @@
       "version": "2026.11.09",
       "filename": "spring-boot.zip",
       "symbols": 89023,
-      "size_mb": 19.88,
-      "size": "19.88 MB",
+      "size_mb": 19.87,
+      "size": "19.87 MB",
       "indexed_date": "2026.11.09",
       "licenses": [
         {
@@ -276,11 +276,11 @@
     }
   },
   "anthropic-sdk": {
-    "version": "2026.10.19",
-    "engine": "1.108.379",
+    "version": "2026.11.09",
+    "engine": "1.108.428",
     "repos": {
-      "anthropics/anthropic-sdk-python": "bcd55fe1d3f0f1240765f8cef04295b67337f55a",
-      "anthropics/anthropic-sdk-typescript": "04a4c28c70de498d6d0e930e43edb5edb9ac545e"
+      "anthropics/anthropic-sdk-python": "4c7b598466b88559583f98216139be8e9b34c1fc",
+      "anthropics/anthropic-sdk-typescript": "590e9494f0214710614c1d6b929b07666f1e3080"
     },
     "catalog": {
       "id": "anthropic-sdk",
@@ -291,20 +291,20 @@
         "anthropics/anthropic-sdk-typescript"
       ],
       "free": false,
-      "version": "2026.10.19",
+      "version": "2026.11.09",
       "filename": "anthropic-sdk.zip",
-      "symbols": 25638,
-      "size_mb": 4.11,
-      "size": "4.11 MB",
-      "indexed_date": "2026.10.19",
+      "symbols": 41332,
+      "size_mb": 8.29,
+      "size": "8.29 MB",
+      "indexed_date": "2026.11.09",
       "licenses": [
         {
           "repo": "anthropics/anthropic-sdk-python",
-          "spdx": "MIT"
+          "spdx": "Apache-2.0"
         },
         {
           "repo": "anthropics/anthropic-sdk-typescript",
-          "spdx": "MIT"
+          "spdx": "Apache-2.0"
         }
       ]
     }
