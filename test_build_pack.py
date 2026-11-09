@@ -155,8 +155,8 @@ OBSERVED_ROOTS = {
     "langchain-ai/langchain": ["LICENSE"],
     "laravel/framework": ["LICENSE.md"],
     "spring-projects/spring-boot": ["LICENSE.txt"],
-    "anthropics/anthropic-sdk-python": ["LICENSE"],
-    "anthropics/anthropic-sdk-typescript": ["LICENSE"],
+    "anthropics/anthropic-sdk-python": ["LICENSE", "LICENSE-MIT"],
+    "anthropics/anthropic-sdk-typescript": ["LICENSE", "LICENSE-MIT"],
     "modelcontextprotocol/python-sdk": ["LICENSE"],
     "modelcontextprotocol/typescript-sdk": ["LICENSE"],
 }
